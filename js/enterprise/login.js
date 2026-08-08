@@ -1,6 +1,9 @@
-import { login } from "../firebase/auth.js";
+import {
+    login,
+    getCurrentAuthUser
+} from "../firebase/auth.js";
 import { checkEnterpriseAccess } from "./authGuard.js";
-
+import { navigate } from "../navigation.js";
 export function EnterpriseLogin() {
 
     return `
@@ -90,7 +93,7 @@ export function EnterpriseLogin() {
 `;
 }
 
-export function initEnterpriseLogin() {
+export async function initEnterpriseLogin() {
 
     const form = document.querySelector(
         "#enterprise-login-form"
@@ -101,6 +104,7 @@ export function initEnterpriseLogin() {
     );
 
     if (!form) {
+
         console.error(
             "No se encontró el formulario Enterprise"
         );
@@ -108,79 +112,86 @@ export function initEnterpriseLogin() {
         return;
     }
 
-    form.addEventListener("submit", async (event) => {
+    form.addEventListener(
+        "submit",
+        async (event) => {
 
-        event.preventDefault();
+            event.preventDefault();
 
-        const email = document
-            .querySelector("#enterprise-email")
-            .value
-            .trim();
+            const email = document
+                .querySelector("#enterprise-email")
+                .value
+                .trim();
 
-        const password = document
-            .querySelector("#enterprise-password")
-            .value;
+            const password = document
+                .querySelector("#enterprise-password")
+                .value;
 
-        errorMessage.hidden = true;
-        errorMessage.textContent = "";
+            errorMessage.hidden = true;
+            errorMessage.textContent = "";
 
-        try {
+            try {
 
-            const user = await login(
-    email,
-    password
-);
+                const user = await login(
+                    email,
+                    password
+                );
 
-console.log(
-    "Login Enterprise correcto:",
-    user.uid
-);
+                console.log(
+                    "Login Enterprise correcto:",
+                    user.uid
+                );
 
-const access = await checkEnterpriseAccess();
+                console.log(
+                    "Usuario después de login:",
+                    getCurrentAuthUser()
+                );
 
-if (!access.allowed) {
 
-    console.error(
-        "Acceso Enterprise denegado:",
-        access.reason
-    );
+                const access =
+                    await checkEnterpriseAccess();
 
-    errorMessage.textContent =
-        "No tienes permisos para acceder al área Enterprise.";
 
-    errorMessage.hidden = false;
+                if (!access.allowed) {
 
-    return;
-}
+                    console.error(
+                        "Acceso Enterprise denegado:",
+                        access.reason
+                    );
 
-console.log(
-    "Acceso Enterprise autorizado:",
-    access.profile
-);
+                    errorMessage.textContent =
+                        "No tienes permisos para acceder al área Enterprise.";
 
-window.history.pushState(
-    {},
-    "",
-    "/enterprise/dashboard"
-);
+                    errorMessage.hidden = false;
 
-window.dispatchEvent(
-    new PopStateEvent("popstate")
-);
+                    return;
+                }
 
-        } catch (error) {
 
-            console.error(
-                "Error de login Enterprise:",
-                error
-            );
+                console.log(
+                    "Acceso Enterprise autorizado:",
+                    access.profile
+                );
 
-            errorMessage.textContent =
-                "Correo o contraseña incorrectos.";
 
-            errorMessage.hidden = false;
+                await navigate(
+                    "/enterprise/dashboard"
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Error de login Enterprise:",
+                    error
+                );
+
+                errorMessage.textContent =
+                    "Correo o contraseña incorrectos.";
+
+                errorMessage.hidden = false;
+
+            }
 
         }
-
-    });
+    );
 }

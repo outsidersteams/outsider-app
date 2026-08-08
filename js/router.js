@@ -7,6 +7,10 @@ import {
     EnterpriseDashboard
 } from "./enterprise/dashboard.js";
 
+import {
+    checkEnterpriseAccess
+} from "./enterprise/authGuard.js";
+
 
 const routes = {
 
@@ -24,9 +28,19 @@ const routes = {
     "/enterprise/dashboard": EnterpriseDashboard
 
 };
+export async function navigate(path) {
 
+    window.history.pushState(
+        {},
+        "",
+        path
+    );
 
-export function router() {
+    router();
+
+}
+
+export async function router() {
 
     const path = window.location.pathname;
 
@@ -41,18 +55,58 @@ export function router() {
         );
 
         return;
+
     }
 
 
     if (route) {
 
+
+        // ========================================
+        // ENTERPRISE ACCESS
+        // ========================================
+
+        if (path === "/enterprise/dashboard") {
+
+            const access = await checkEnterpriseAccess();
+
+            if (!access.allowed) {
+
+                console.warn(
+                    "Acceso Enterprise rechazado:",
+                    access.reason
+                );
+
+                window.history.replaceState(
+                    {},
+                    "",
+                    "/enterprise/login"
+                );
+
+                return router();
+
+            }
+
+        }
+
+
+        // ========================================
+        // RENDER ROUTE
+        // ========================================
+
         app.innerHTML = route();
+
+
+        // ========================================
+        // ENTERPRISE LOGIN INIT
+        // ========================================
 
         if (path === "/enterprise/login") {
 
             initEnterpriseLogin();
 
         }
+
 
     } else {
 
@@ -65,6 +119,15 @@ export function router() {
 
 }
 
+
+// ========================================
+// SPA NAVIGATION
+// ========================================
+
+window.addEventListener(
+    "popstate",
+    router
+);
 
 // Escuchar cambios de URL dentro de la SPA
 
