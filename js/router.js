@@ -1,17 +1,28 @@
+import {
+    EnterpriseLogin,
+    initEnterpriseLogin
+} from "./enterprise/login.js";
+
+import {
+    EnterpriseDashboard
+} from "./enterprise/dashboard.js";
+
+
 const routes = {
+
     "/": () => {
+
         return `
             <h1>OUTSIDER</h1>
             <p>Store pública</p>
         `;
+
     },
 
-    "/enterprise/login": () => {
-        return `
-            <h1>OUTSIDER ENTERPRISE</h1>
-            <p>Login empresarial</p>
-        `;
-    }
+    "/enterprise/login": EnterpriseLogin,
+
+    "/enterprise/dashboard": EnterpriseDashboard
+
 };
 
 
@@ -24,13 +35,24 @@ export function router() {
     const app = document.querySelector("#app");
 
     if (!app) {
-        console.error("No se encontró #app");
+
+        console.error(
+            "No se encontró #app"
+        );
+
         return;
     }
+
 
     if (route) {
 
         app.innerHTML = route();
+
+        if (path === "/enterprise/login") {
+
+            initEnterpriseLogin();
+
+        }
 
     } else {
 
@@ -42,3 +64,11 @@ export function router() {
     }
 
 }
+
+
+// Escuchar cambios de URL dentro de la SPA
+
+window.addEventListener(
+    "popstate",
+    router
+);
