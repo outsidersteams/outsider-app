@@ -12,7 +12,7 @@
 
     overflow: hidden;
 
-    padding: 32px 20px;
+    padding: 16px;
 
     background:
         radial-gradient(
@@ -84,8 +84,7 @@
     z-index: 1;
 
     width: min(100%, 326px);
-
-    min-height: 688px;
+height: min(688px, calc(100svh - 32px));
 
     display: flex;
     align-items: center;
@@ -348,7 +347,39 @@
 // ========================================
 // TABLET
 // ========================================
+@media (max-width: 767px) and (max-height: 720px) {
 
+    .enterprise-login__card {
+        height: calc(100svh - 24px);
+        padding-top: 32px;
+        padding-bottom: 28px;
+    }
+
+    .enterprise-login__brand {
+        margin-bottom: 42px;
+    }
+
+    .enterprise-login__form {
+        gap: 30px;
+    }
+
+    .enterprise-login__field {
+        gap: 10px;
+    }
+
+    .enterprise-login__label {
+        font-size: 24px;
+    }
+
+    .enterprise-login__input {
+        height: 46px;
+    }
+
+    .enterprise-login__button {
+        height: 48px;
+        margin-top: 16px;
+    }
+}
 @media (min-width: 768px) {
 
     .enterprise-login {
