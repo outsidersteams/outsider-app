@@ -1,0 +1,46 @@
+// ========================================
+// OUTSIDER — DESIGN TOKENS
+// ========================================
+
+// Colors
+$color-black: #000000;
+$color-white: #ffffff;
+
+$color-purple: #7c3aed;
+$color-purple-light: #a855f7;
+
+$color-text: #111111;
+$color-text-muted: #6b7280;
+
+$color-success: #22c55e;
+$color-danger: #ef4444;
+$color-warning: #f59e0b;
+
+// Borders
+$border-color: #e5e7eb;
+
+// Radius
+$radius-sm: 8px;
+$radius-md: 14px;
+$radius-lg: 24px;
+
+// Spacing
+$space-xs: 4px;
+$space-sm: 8px;
+$space-md: 16px;
+$space-lg: 24px;
+$space-xl: 32px;
+$space-2xl: 48px;
+
+// Typography
+$font-primary:
+    "Inter",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+$font-display:
+    "Sedgwick Ave Display",
+    cursive;

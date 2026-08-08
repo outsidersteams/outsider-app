@@ -5,55 +5,77 @@ export function EnterpriseLogin() {
 
     return `
 
-        <section class="enterprise-login">
+    <main class="enterprise-login">
 
-            <div class="enterprise-login__card">
+        <div class="enterprise-login__background"></div>
 
-                <h1>OUTSIDER ENTERPRISE</h1>
+        <section class="enterprise-login__card">
 
-                <p>
-                    Acceso para personal autorizado
-                </p>
+            <div class="enterprise-login__content">
+        <div class="enterprise-login__brand">
+    <img
+        src="/assets/outsider-logo.svg"
+        alt="OUTSIDER"
+    >
+</div>
+                
 
                 <form
                     id="enterprise-login-form"
+                    class="enterprise-login__form"
                     method="post"
                 >
 
-                    <div>
-                        <label for="enterprise-email">
-                            Correo electrónico
+                    <div class="enterprise-login__field">
+
+                        <label
+                            for="enterprise-email"
+                            class="enterprise-login__label"
+                        >
+                            Email
                         </label>
 
                         <input
                             type="email"
                             id="enterprise-email"
                             name="email"
+                            class="enterprise-login__input"
                             autocomplete="email"
                             required
                         >
+
                     </div>
 
-                    <div>
-                        <label for="enterprise-password">
-                            Contraseña
+                    <div class="enterprise-login__field">
+
+                        <label
+                            for="enterprise-password"
+                            class="enterprise-login__label"
+                        >
+                            Password
                         </label>
 
                         <input
                             type="password"
                             id="enterprise-password"
                             name="password"
+                            class="enterprise-login__input"
                             autocomplete="current-password"
                             required
                         >
+
                     </div>
 
-                    <button type="submit">
-                        Iniciar sesión
-                    </button>
+                    <button
+    type="submit"
+    class="enterprise-login__button font-display"
+>
+    ENTRAR
+</button>
 
                     <p
                         id="enterprise-login-error"
+                        class="enterprise-login__error"
                         hidden
                     ></p>
 
@@ -63,7 +85,9 @@ export function EnterpriseLogin() {
 
         </section>
 
-    `;
+    </main>
+
+`;
 }
 
 export function initEnterpriseLogin() {

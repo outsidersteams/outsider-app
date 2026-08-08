@@ -1,10 +1,10 @@
 {
   "devDependencies": {
+    "sass": "^1.102.0",
     "serve": "^14.2.6"
   },
   "scripts": {
-  "dev": "serve -s . -l 5500"
+    "dev": "serve -s . -l 5500",
+    "sass": "sass css/main.scss css/main.css --watch"
+  }
 }
-  
-}
-
