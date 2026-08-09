@@ -1,6 +1,5 @@
 import { logout } from "../firebase/auth.js";
 
-
 export function EnterpriseSidebar() {
 
     return `
@@ -77,6 +76,19 @@ export function EnterpriseSidebar() {
                     </span>
                 </a>
 
+
+                <a
+                    href="/enterprise/production"
+                    class="enterprise-sidebar__link"
+                    data-route="/enterprise/production"
+                >
+                    <i class="fa-solid fa-industry enterprise-sidebar__icon"></i>
+
+                    <span class="enterprise-sidebar__label">
+                        Producción
+                    </span>
+                </a>
+
             </div>
 
 
@@ -111,6 +123,7 @@ export function EnterpriseSidebar() {
 
         </nav>
     `;
+
 }
 
 
@@ -123,10 +136,12 @@ export function initEnterpriseSidebar() {
     const currentPath =
         window.location.pathname;
 
+
     const links =
         document.querySelectorAll(
             ".enterprise-sidebar__link[data-route]"
         );
+
 
     links.forEach((link) => {
 
@@ -149,6 +164,7 @@ export function initEnterpriseSidebar() {
         document.querySelector(
             "#enterprise-logout"
         );
+
 
     if (!logoutButton) {
 

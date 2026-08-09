@@ -3,6 +3,7 @@ import {
     initEnterpriseLayout
 } from "../components/enterpriseLayout.js";
 
+
 import {
     getOrders,
     getOrder,
@@ -10,6 +11,11 @@ import {
     updatePaymentStatus,
     updateProductionStatus
 } from "../firebase/firestore.js";
+
+
+// ========================================
+// ENTERPRISE DASHBOARD
+// ========================================
 
 export function EnterpriseDashboard(profile) {
 
@@ -74,28 +80,39 @@ export function EnterpriseDashboard(profile) {
 
     `;
 
+
     return EnterpriseLayout(
         content,
         profile
     );
+
 }
 
+
+// ========================================
+// INIT DASHBOARD
+// ========================================
 
 export function initEnterpriseDashboard() {
 
     initEnterpriseLayout();
+
 
     const params =
         new URLSearchParams(
             window.location.search
         );
 
+
     const orderId =
         params.get("order");
 
+
     if (orderId) {
 
-        loadOrderDetail(orderId);
+        loadOrderDetail(
+            orderId
+        );
 
     } else {
 
@@ -105,6 +122,11 @@ export function initEnterpriseDashboard() {
 
 }
 
+
+// ========================================
+// ORDER ACTIONS
+// ========================================
+
 function initOrderActions() {
 
     const buttons =
@@ -113,42 +135,52 @@ function initOrderActions() {
         );
 
 
-    buttons.forEach(button => {
+    buttons.forEach(
+        button => {
 
-        button.addEventListener(
-            "click",
-            () => {
+            button.addEventListener(
+                "click",
+                () => {
 
-                const orderId =
-                    button.dataset.orderId;
+                    const orderId =
+                        button.dataset.orderId;
 
 
-                if (!orderId) {
-                    return;
+                    if (!orderId) {
+
+                        return;
+
+                    }
+
+
+                    const url =
+                        `/enterprise/dashboard?order=${encodeURIComponent(
+                            orderId
+                        )}`;
+
+
+                    window.history.pushState(
+                        {},
+                        "",
+                        url
+                    );
+
+
+                    initEnterpriseDashboard();
+
                 }
+            );
 
-
-                const url =
-                    `/enterprise/dashboard?order=${encodeURIComponent(
-                        orderId
-                    )}`;
-
-
-                window.history.pushState(
-                    {},
-                    "",
-                    url
-                );
-
-
-                initEnterpriseDashboard();
-
-            }
-        );
-
-    });
+        }
+    );
 
 }
+
+
+// ========================================
+// BACK TO ORDERS
+// ========================================
+
 function initBackToOrders() {
 
     const button =
@@ -158,7 +190,9 @@ function initBackToOrders() {
 
 
     if (!button) {
+
         return;
+
     }
 
 
@@ -179,6 +213,12 @@ function initBackToOrders() {
     );
 
 }
+
+
+// ========================================
+// ORDER STATUS
+// ========================================
+
 function initOrderStatusControl() {
 
     const select =
@@ -186,9 +226,13 @@ function initOrderStatusControl() {
             "#enterprise-order-status"
         );
 
+
     if (!select) {
+
         return;
+
     }
+
 
     select.addEventListener(
         "change",
@@ -197,11 +241,18 @@ function initOrderStatusControl() {
             const orderId =
                 select.dataset.orderId;
 
+
             const newStatus =
                 select.value;
 
-            if (!orderId || !newStatus) {
+
+            if (
+                !orderId ||
+                !newStatus
+            ) {
+
                 return;
+
             }
 
 
@@ -210,35 +261,42 @@ function initOrderStatusControl() {
                 "";
 
 
-            select.disabled = true;
+            select.disabled =
+                true;
+
 
             try {
+
                 console.log(
-    "ORDER STATUS TEST",
-    {
-        orderId,
-        newStatus
-    }
-);
+                    "ORDER STATUS TEST",
+                    {
+                        orderId,
+                        newStatus
+                    }
+                );
+
 
                 await updateOrderStatus(
                     orderId,
                     newStatus
                 );
-                
+
 
                 select.dataset.previousStatus =
                     newStatus;
+
 
                 updateOrderStatusSelectStyle(
                     select,
                     newStatus
                 );
 
+
                 console.log(
                     "✓ Estado del pedido actualizado:",
                     newStatus
                 );
+
 
             } catch (error) {
 
@@ -247,10 +305,12 @@ function initOrderStatusControl() {
                     error
                 );
 
+
                 if (previousStatus) {
 
                     select.value =
                         previousStatus;
+
 
                     updateOrderStatusSelectStyle(
                         select,
@@ -261,17 +321,25 @@ function initOrderStatusControl() {
 
             } finally {
 
-                select.disabled = false;
+                select.disabled =
+                    false;
 
             }
 
         }
     );
 
+
     select.dataset.previousStatus =
         select.value;
 
 }
+
+
+// ========================================
+// PAYMENT STATUS
+// ========================================
+
 function initPaymentStatusControl() {
 
     const select =
@@ -279,9 +347,13 @@ function initPaymentStatusControl() {
             "#enterprise-payment-status"
         );
 
+
     if (!select) {
+
         return;
+
     }
+
 
     select.addEventListener(
         "change",
@@ -290,17 +362,29 @@ function initPaymentStatusControl() {
             const orderId =
                 select.dataset.orderId;
 
+
             const newStatus =
                 select.value;
 
-            if (!orderId || !newStatus) {
+
+            if (
+                !orderId ||
+                !newStatus
+            ) {
+
                 return;
+
             }
 
-            const previousStatus =
-                select.dataset.previousStatus || "";
 
-            select.disabled = true;
+            const previousStatus =
+                select.dataset.previousStatus ||
+                "";
+
+
+            select.disabled =
+                true;
+
 
             try {
 
@@ -312,23 +396,28 @@ function initPaymentStatusControl() {
                     }
                 );
 
+
                 await updatePaymentStatus(
                     orderId,
                     newStatus
                 );
 
+
                 select.dataset.previousStatus =
                     newStatus;
+
 
                 updatePaymentStatusSelectStyle(
                     select,
                     newStatus
                 );
 
+
                 console.log(
                     "✓ Estado de pago actualizado:",
                     newStatus
                 );
+
 
             } catch (error) {
 
@@ -337,10 +426,12 @@ function initPaymentStatusControl() {
                     error
                 );
 
+
                 if (previousStatus) {
 
                     select.value =
                         previousStatus;
+
 
                     updatePaymentStatusSelectStyle(
                         select,
@@ -351,17 +442,25 @@ function initPaymentStatusControl() {
 
             } finally {
 
-                select.disabled = false;
+                select.disabled =
+                    false;
 
             }
 
         }
     );
 
+
     select.dataset.previousStatus =
         select.value;
 
 }
+
+
+// ========================================
+// PRODUCTION STATUS
+// ========================================
+
 function initProductionStatusControl() {
 
     const select =
@@ -369,9 +468,13 @@ function initProductionStatusControl() {
             "#enterprise-production-status"
         );
 
+
     if (!select) {
+
         return;
+
     }
+
 
     select.addEventListener(
         "change",
@@ -380,17 +483,29 @@ function initProductionStatusControl() {
             const orderId =
                 select.dataset.orderId;
 
+
             const newStatus =
                 select.value;
 
-            if (!orderId || !newStatus) {
+
+            if (
+                !orderId ||
+                !newStatus
+            ) {
+
                 return;
+
             }
 
-            const previousStatus =
-                select.dataset.previousStatus || "";
 
-            select.disabled = true;
+            const previousStatus =
+                select.dataset.previousStatus ||
+                "";
+
+
+            select.disabled =
+                true;
+
 
             try {
 
@@ -402,23 +517,28 @@ function initProductionStatusControl() {
                     }
                 );
 
+
                 await updateProductionStatus(
                     orderId,
                     newStatus
                 );
 
+
                 select.dataset.previousStatus =
                     newStatus;
+
 
                 updateProductionStatusSelectStyle(
                     select,
                     newStatus
                 );
 
+
                 console.log(
                     "✓ Estado de producción actualizado:",
                     newStatus
                 );
+
 
             } catch (error) {
 
@@ -427,10 +547,12 @@ function initProductionStatusControl() {
                     error
                 );
 
+
                 if (previousStatus) {
 
                     select.value =
                         previousStatus;
+
 
                     updateProductionStatusSelectStyle(
                         select,
@@ -441,17 +563,25 @@ function initProductionStatusControl() {
 
             } finally {
 
-                select.disabled = false;
+                select.disabled =
+                    false;
 
             }
 
         }
     );
 
+
     select.dataset.previousStatus =
         select.value;
 
 }
+
+
+// ========================================
+// PRODUCTION STATUS STYLE
+// ========================================
+
 function updateProductionStatusSelectStyle(
     select,
     status
@@ -463,11 +593,18 @@ function updateProductionStatusSelectStyle(
         "enterprise-order-detail__production-select--ready"
     );
 
+
     select.classList.add(
         `enterprise-order-detail__production-select--${status}`
     );
 
 }
+
+
+// ========================================
+// PAYMENT STATUS STYLE
+// ========================================
+
 function updatePaymentStatusSelectStyle(
     select,
     status
@@ -480,11 +617,18 @@ function updatePaymentStatusSelectStyle(
         "enterprise-order-detail__payment-select--refunded"
     );
 
+
     select.classList.add(
         `enterprise-order-detail__payment-select--${status}`
     );
 
 }
+
+
+// ========================================
+// ORDER STATUS STYLE
+// ========================================
+
 function updateOrderStatusSelectStyle(
     select,
     status
@@ -499,11 +643,18 @@ function updateOrderStatusSelectStyle(
         "enterprise-order-detail__status-select--cancelled"
     );
 
+
     select.classList.add(
         `enterprise-order-detail__status-select--${status}`
     );
 
 }
+
+
+// ========================================
+// LOAD ORDERS
+// ========================================
+
 async function loadOrders() {
 
     const container =
@@ -554,47 +705,62 @@ async function loadOrders() {
         }
 
 
-        container.innerHTML = orders
-            .map(order => renderOrder(order))
-            .join("");
+        container.innerHTML =
+            orders
+                .map(
+                    order =>
+                        renderOrder(order)
+                )
+                .join("");
 
-            initOrderActions();
+
+        initOrderActions();
+
 
     } catch (error) {
 
-    console.error(
-        "Error cargando detalle del pedido:",
-        error
-    );
+        console.error(
+            "Error cargando pedidos:",
+            error
+        );
 
 
-    container.innerHTML = `
+        container.innerHTML = `
 
-        <div class="enterprise-dashboard__error">
+            <div class="enterprise-dashboard__error">
 
-            <i class="fa-solid fa-triangle-exclamation"></i>
+                <i class="fa-solid fa-triangle-exclamation"></i>
 
-            <h2>
-                No se pudo cargar el pedido
-            </h2>
+                <h2>
+                    No se pudo cargar el pedido
+                </h2>
 
-            <p>
-                Intenta nuevamente.
-            </p>
+                <p>
+                    Intenta nuevamente.
+                </p>
 
-        </div>
+            </div>
 
-    `;
+        `;
+
+    }
 
 }
 
-}
-async function loadOrderDetail(orderId) {
+
+// ========================================
+// LOAD ORDER DETAIL
+// ========================================
+
+async function loadOrderDetail(
+    orderId
+) {
 
     const container =
         document.querySelector(
             "#enterprise-orders"
         );
+
 
     if (!container) {
 
@@ -603,212 +769,33 @@ async function loadOrderDetail(orderId) {
         );
 
         return;
+
     }
 
 
     try {
 
-    const order =
-        await getOrder(orderId);
+        const order =
+            await getOrder(
+                orderId
+            );
 
 
-    if (!order) {
+        if (!order) {
 
-        container.innerHTML = `
+            container.innerHTML = `
 
-            <div class="enterprise-dashboard__error">
+                <div class="enterprise-dashboard__error">
 
-                <i class="fa-solid fa-circle-exclamation"></i>
+                    <i class="fa-solid fa-circle-exclamation"></i>
 
-                <h2>
-                    Pedido no encontrado
-                </h2>
+                    <h2>
+                        Pedido no encontrado
+                    </h2>
 
-                <p>
-                    El pedido solicitado no existe.
-                </p>
-
-                <button
-                    type="button"
-                    class="enterprise-order-detail__back"
-                    id="enterprise-back-orders"
-                >
-
-                    <i class="fa-solid fa-arrow-left"></i>
-
-                    Volver a pedidos
-
-                </button>
-
-            </div>
-
-        `;
-
-       initBackToOrders();
-
-initOrderStatusControl();
-
-initPaymentStatusControl();
-        return;
-
-    }
-
-
-   container.innerHTML =
-    renderOrderDetail(order);
-
-
-initBackToOrders();
-
-initOrderStatusControl();
-
-initPaymentStatusControl();
-
-initProductionStatusControl();
-
-
-} catch (error) {
-
-    console.error(
-        "Error cargando detalle del pedido:",
-        error
-    );
-
-    // ...
-}
-
-}
-function getOrderStatusLabel(status) {
-
-    const labels = {
-
-        pending: "Pendiente",
-
-        confirmed: "Confirmado",
-
-        processing: "En proceso",
-
-        ready: "Listo",
-
-        completed: "Completado",
-
-        cancelled: "Cancelado"
-
-    };
-
-    return labels[status] || "Pendiente";
-}
-function renderOrderDetail(order) {
-
-    const customer =
-        order.customerSnapshot || {};
-
-    const address =
-        customer.address || {};
-
-    const items =
-        Array.isArray(order.items)
-            ? order.items
-            : [];
-
-
-    const status =
-        order.orderStatus ||
-        "pending";
-
-
-    const paymentStatus =
-        order.paymentStatus ||
-        "pending";
-
-    const productionStatus =
-    order.productionStatus ||
-    (
-        order.requiresProduction
-            ? "pending"
-            : "not_required"
-    );
-
-
-    const paymentMethod =
-        order.paymentMethod ||
-        "other";
-
-
-    const channel =
-        order.salesChannel ||
-        "manual";
-
-
-    const subtotal =
-        Number(order.subtotal || 0)
-            .toFixed(2);
-
-
-    const shipping =
-        Number(order.shipping || 0)
-            .toFixed(2);
-
-
-    const discount =
-        Number(order.discount || 0)
-            .toFixed(2);
-
-
-    const total =
-        Number(order.total || 0)
-            .toFixed(2);
-
-
-    const itemsHTML =
-        items.map(item => `
-
-            <div class="enterprise-order-detail__item">
-
-                <div class="enterprise-order-detail__item-main">
-
-                    <strong>
-                        ${item.productName || "Producto"}
-                    </strong>
-
-                    <span>
-                        ${item.variantName || "Sin variante"}
-                    </span>
-
-                    <small>
-                        SKU: ${item.sku || "—"}
-                    </small>
-
-                </div>
-
-
-                <div class="enterprise-order-detail__item-quantity">
-
-                    x${item.quantity || 0}
-
-                </div>
-
-
-                <div class="enterprise-order-detail__item-price">
-
-                    Q${Number(
-                        item.total || 0
-                    ).toFixed(2)}
-
-                </div>
-
-            </div>
-
-        `).join("");
-
-
-    return `
-
-        <div class="enterprise-order-detail">
-
-            <div class="enterprise-order-detail__header">
-
-                <div>
+                    <p>
+                        El pedido solicitado no existe.
+                    </p>
 
                     <button
                         type="button"
@@ -822,76 +809,407 @@ function renderOrderDetail(order) {
 
                     </button>
 
+                </div>
 
-                    <div class="enterprise-order-detail__title-row">
+            `;
+
+
+            initBackToOrders();
+
+            return;
+
+        }
+
+
+        // ========================================
+        // RENDER DETAIL
+        // ========================================
+
+        container.innerHTML =
+            renderOrderDetail(
+                order
+            );
+
+
+        // ========================================
+        // INIT CONTROLS
+        // ========================================
+
+        initBackToOrders();
+
+        initOrderStatusControl();
+
+        initPaymentStatusControl();
+
+        initProductionStatusControl();
+
+
+    } catch (error) {
+
+        console.error(
+            "Error cargando detalle del pedido:",
+            error
+        );
+
+    }
+
+}
+
+
+// ========================================
+// ORDER STATUS LABEL
+// ========================================
+
+function getOrderStatusLabel(
+    status
+) {
+
+    const labels = {
+
+        pending:
+            "Pendiente",
+
+        confirmed:
+            "Confirmado",
+
+        processing:
+            "En proceso",
+
+        ready:
+            "Listo",
+
+        completed:
+            "Completado",
+
+        cancelled:
+            "Cancelado"
+
+    };
+
+
+    return (
+        labels[status] ||
+        "Pendiente"
+    );
+
+}
+
+
+// ========================================
+// RENDER ORDER DETAIL
+// ========================================
+
+function renderOrderDetail(
+    order
+) {
+
+    const customer =
+        order.customerSnapshot || {};
+
+
+    const address =
+        customer.address || {};
+
+
+    const items =
+        Array.isArray(order.items)
+            ? order.items
+            : [];
+
+
+    // ========================================
+    // ORDER STATUS
+    // ========================================
+
+    const status =
+        order.orderStatus ||
+        "pending";
+
+
+    // ========================================
+    // PRODUCTION STATUS
+    // ========================================
+
+    const productionStatus =
+        order.productionStatus ||
+        (
+            order.requiresProduction
+                ? "pending"
+                : "not_required"
+        );
+
+
+    // ========================================
+    // PAYMENT STATUS
+    // ========================================
+
+    const paymentStatus =
+        order.paymentStatus ||
+        "pending";
+
+
+    const paymentMethod =
+        order.paymentMethod ||
+        "other";
+
+
+    const channel =
+        order.salesChannel ||
+        "manual";
+
+
+    const subtotal =
+        Number(
+            order.subtotal || 0
+        ).toFixed(2);
+
+
+    const shipping =
+        Number(
+            order.shipping || 0
+        ).toFixed(2);
+
+
+    const discount =
+        Number(
+            order.discount || 0
+        ).toFixed(2);
+
+
+    const total =
+        Number(
+            order.total || 0
+        ).toFixed(2);
+
+
+    // ========================================
+    // ITEMS
+    // ========================================
+
+    const itemsHTML =
+        items
+            .map(
+                item => `
+
+                    <div
+                        class="
+                            enterprise-order-detail__item
+                        "
+                    >
+
+                        <div
+                            class="
+                                enterprise-order-detail__item-main
+                            "
+                        >
+
+                            <strong>
+                                ${
+                                    item.productName ||
+                                    "Producto"
+                                }
+                            </strong>
+
+                            <span>
+                                ${
+                                    item.variantName ||
+                                    "Sin variante"
+                                }
+                            </span>
+
+                            <small>
+                                SKU:
+                                ${
+                                    item.sku ||
+                                    "—"
+                                }
+                            </small>
+
+                        </div>
+
+
+                        <div
+                            class="
+                                enterprise-order-detail__item-quantity
+                            "
+                        >
+                            x${item.quantity || 0}
+                        </div>
+
+
+                        <div
+                            class="
+                                enterprise-order-detail__item-price
+                            "
+                        >
+                            Q${
+                                Number(
+                                    item.total || 0
+                                ).toFixed(2)
+                            }
+                        </div>
+
+                    </div>
+
+                `
+            )
+            .join("");
+
+
+    // ========================================
+    // DETAIL HTML
+    // ========================================
+
+    return `
+
+        <div
+            class="
+                enterprise-order-detail
+            "
+        >
+
+            <div
+                class="
+                    enterprise-order-detail__header
+                "
+            >
+
+                <div>
+
+                    <button
+                        type="button"
+                        class="
+                            enterprise-order-detail__back
+                        "
+                        id="enterprise-back-orders"
+                    >
+
+                        <i
+                            class="
+                                fa-solid
+                                fa-arrow-left
+                            "
+                        ></i>
+
+                        Volver a pedidos
+
+                    </button>
+
+
+                    <div
+                        class="
+                            enterprise-order-detail__title-row
+                        "
+                    >
 
                         <h1>
                             Pedido #${order.orderNumber}
                         </h1>
 
-                        <div class="enterprise-order-detail__status-control">
 
-    <label
-        for="enterprise-order-status"
-        class="enterprise-order-detail__status-label"
-    >
-        Estado
-    </label>
+                        <!-- ========================================
+                             ORDER STATUS
+                        ======================================== -->
 
-    <select
-        id="enterprise-order-status"
-        class="
-            enterprise-order-detail__status-select
-            enterprise-order-detail__status-select--${status}
-        "
-        data-order-id="${order.id}"
-    >
+                        <div
+                            class="
+                                enterprise-order-detail__status-control
+                            "
+                        >
 
-        <option
-            value="pending"
-            ${status === "pending" ? "selected" : ""}
-        >
-            Pendiente
-        </option>
+                            <label
+                                for="enterprise-order-status"
+                                class="
+                                    enterprise-order-detail__status-label
+                                "
+                            >
+                                Estado
+                            </label>
 
-        <option
-            value="confirmed"
-            ${status === "confirmed" ? "selected" : ""}
-        >
-            Confirmado
-        </option>
 
-        <option
-            value="processing"
-            ${status === "processing" ? "selected" : ""}
-        >
-            En proceso
-        </option>
+                            <select
+                                id="enterprise-order-status"
+                                class="
+                                    enterprise-order-detail__status-select
+                                    enterprise-order-detail__status-select--${status}
+                                "
+                                data-order-id="${order.id}"
+                            >
 
-        <option
-            value="ready"
-            ${status === "ready" ? "selected" : ""}
-        >
-            Listo
-        </option>
+                                <option
+                                    value="pending"
+                                    ${
+                                        status === "pending"
+                                            ? "selected"
+                                            : ""
+                                    }
+                                >
+                                    Pendiente
+                                </option>
 
-        <option
-            value="completed"
-            ${status === "completed" ? "selected" : ""}
-        >
-            Completado
-        </option>
 
-        <option
-            value="cancelled"
-            ${status === "cancelled" ? "selected" : ""}
-        >
-            Cancelado
-        </option>
+                                <option
+                                    value="confirmed"
+                                    ${
+                                        status === "confirmed"
+                                            ? "selected"
+                                            : ""
+                                    }
+                                >
+                                    Confirmado
+                                </option>
 
-    </select>
 
-</div>
+                                <option
+                                    value="processing"
+                                    ${
+                                        status === "processing"
+                                            ? "selected"
+                                            : ""
+                                    }
+                                >
+                                    En proceso
+                                </option>
+
+
+                                <option
+                                    value="ready"
+                                    ${
+                                        status === "ready"
+                                            ? "selected"
+                                            : ""
+                                    }
+                                >
+                                    Listo
+                                </option>
+
+
+                                <option
+                                    value="completed"
+                                    ${
+                                        status === "completed"
+                                            ? "selected"
+                                            : ""
+                                    }
+                                >
+                                    Completado
+                                </option>
+
+
+                                <option
+                                    value="cancelled"
+                                    ${
+                                        status === "cancelled"
+                                            ? "selected"
+                                            : ""
+                                    }
+                                >
+                                    Cancelado
+                                </option>
+
+                            </select>
+
+                        </div>
 
                     </div>
 
@@ -900,18 +1218,40 @@ function renderOrderDetail(order) {
             </div>
 
 
-            <div class="enterprise-order-detail__grid">
+            <!-- ========================================
+                 DETAIL GRID
+            ======================================== -->
+
+            <div
+                class="
+                    enterprise-order-detail__grid
+                "
+            >
 
 
-                <!-- CLIENTE -->
+                <!-- ========================================
+                     CLIENTE
+                ======================================== -->
 
-                <section class="enterprise-order-detail__card">
+                <section
+                    class="
+                        enterprise-order-detail__card
+                    "
+                >
 
-                    <div class="enterprise-order-detail__card-header">
+                    <div
+                        class="
+                            enterprise-order-detail__card-header
+                        "
+                    >
 
                         <div>
 
-                            <span class="enterprise-dashboard__eyebrow">
+                            <span
+                                class="
+                                    enterprise-dashboard__eyebrow
+                                "
+                            >
                                 Cliente
                             </span>
 
@@ -921,40 +1261,84 @@ function renderOrderDetail(order) {
 
                         </div>
 
-                        <i class="fa-solid fa-user"></i>
+
+                        <i
+                            class="
+                                fa-solid
+                                fa-user
+                            "
+                        ></i>
 
                     </div>
 
 
-                    <div class="enterprise-order-detail__customer">
+                    <div
+                        class="
+                            enterprise-order-detail__customer
+                        "
+                    >
 
                         <strong>
-                            ${customer.name || "Sin nombre"}
+                            ${
+                                customer.name ||
+                                "Sin nombre"
+                            }
                         </strong>
 
                         <span>
-                            ${customer.phone || "Sin teléfono"}
+                            ${
+                                customer.phone ||
+                                "Sin teléfono"
+                            }
                         </span>
 
                         <span>
-                            ${customer.email || "Sin correo"}
+                            ${
+                                customer.email ||
+                                "Sin correo"
+                            }
                         </span>
 
                     </div>
 
 
-                    <div class="enterprise-order-detail__address">
+                    <div
+                        class="
+                            enterprise-order-detail__address
+                        "
+                    >
 
                         <span>
                             Dirección
                         </span>
 
                         <p>
-                            ${address.line1 || ""}
-                            ${address.line2 || ""}
-                            ${address.city || ""}
-                            ${address.department || ""}
-                            ${address.country || ""}
+
+                            ${
+                                address.line1 ||
+                                ""
+                            }
+
+                            ${
+                                address.line2 ||
+                                ""
+                            }
+
+                            ${
+                                address.city ||
+                                ""
+                            }
+
+                            ${
+                                address.department ||
+                                ""
+                            }
+
+                            ${
+                                address.country ||
+                                ""
+                            }
+
                         </p>
 
                     </div>
@@ -962,15 +1346,29 @@ function renderOrderDetail(order) {
                 </section>
 
 
-                <!-- PEDIDO -->
+                <!-- ========================================
+                     PEDIDO
+                ======================================== -->
 
-                <section class="enterprise-order-detail__card">
+                <section
+                    class="
+                        enterprise-order-detail__card
+                    "
+                >
 
-                    <div class="enterprise-order-detail__card-header">
+                    <div
+                        class="
+                            enterprise-order-detail__card-header
+                        "
+                    >
 
                         <div>
 
-                            <span class="enterprise-dashboard__eyebrow">
+                            <span
+                                class="
+                                    enterprise-dashboard__eyebrow
+                                "
+                            >
                                 Pedido
                             </span>
 
@@ -980,12 +1378,24 @@ function renderOrderDetail(order) {
 
                         </div>
 
-                        <i class="fa-solid fa-receipt"></i>
+
+                        <i
+                            class="
+                                fa-solid
+                                fa-receipt
+                            "
+                        ></i>
 
                     </div>
 
 
-                    <div class="enterprise-order-detail__meta">
+                    <div
+                        class="
+                            enterprise-order-detail__meta
+                        "
+                    >
+
+                        <!-- CANAL -->
 
                         <div>
 
@@ -1000,53 +1410,77 @@ function renderOrderDetail(order) {
                         </div>
 
 
+                        <!-- PAGO -->
+
                         <div>
 
-    <span>
-        Pago
-    </span>
+                            <span>
+                                Pago
+                            </span>
 
-    <select
-        id="enterprise-payment-status"
-        class="
-            enterprise-order-detail__payment-select
-            enterprise-order-detail__payment-select--${paymentStatus}
-        "
-        data-order-id="${order.id}"
-    >
 
-        <option
-            value="pending"
-            ${paymentStatus === "pending" ? "selected" : ""}
-        >
-            Pendiente
-        </option>
+                            <select
+                                id="enterprise-payment-status"
+                                class="
+                                    enterprise-order-detail__payment-select
+                                    enterprise-order-detail__payment-select--${paymentStatus}
+                                "
+                                data-order-id="${order.id}"
+                            >
 
-        <option
-            value="paid"
-            ${paymentStatus === "paid" ? "selected" : ""}
-        >
-            Pagado
-        </option>
+                                <option
+                                    value="pending"
+                                    ${
+                                        paymentStatus === "pending"
+                                            ? "selected"
+                                            : ""
+                                    }
+                                >
+                                    Pendiente
+                                </option>
 
-        <option
-            value="partial"
-            ${paymentStatus === "partial" ? "selected" : ""}
-        >
-            Pago parcial
-        </option>
 
-        <option
-            value="refunded"
-            ${paymentStatus === "refunded" ? "selected" : ""}
-        >
-            Reembolsado
-        </option>
+                                <option
+                                    value="paid"
+                                    ${
+                                        paymentStatus === "paid"
+                                            ? "selected"
+                                            : ""
+                                    }
+                                >
+                                    Pagado
+                                </option>
 
-    </select>
 
-</div>
+                                <option
+                                    value="partial"
+                                    ${
+                                        paymentStatus === "partial"
+                                            ? "selected"
+                                            : ""
+                                    }
+                                >
+                                    Pago parcial
+                                </option>
 
+
+                                <option
+                                    value="refunded"
+                                    ${
+                                        paymentStatus === "refunded"
+                                            ? "selected"
+                                            : ""
+                                    }
+                                >
+                                    Reembolsado
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- MÉTODO -->
 
                         <div>
 
@@ -1061,68 +1495,85 @@ function renderOrderDetail(order) {
                         </div>
 
 
+                        <!-- PRODUCCIÓN -->
+
                         <div>
 
-    <span>
-        Producción
-    </span>
+                            <span>
+                                Producción
+                            </span>
 
-    ${
-        order.requiresProduction
-            ? `
-                <select
-                    id="enterprise-production-status"
-                    class="
-                        enterprise-order-detail__production-select
-                        enterprise-order-detail__production-select--${productionStatus}
-                    "
-                    data-order-id="${order.id}"
-                >
 
-                    <option
-                        value="pending"
-                        ${productionStatus === "pending"
-                            ? "selected"
-                            : ""}
-                    >
-                        Pendiente
-                    </option>
+                            ${
+                                order.requiresProduction
+                                    ? `
 
-                    <option
-                        value="in_production"
-                        ${productionStatus === "in_production"
-                            ? "selected"
-                            : ""}
-                    >
-                        En producción
-                    </option>
+                                        <select
+                                            id="enterprise-production-status"
+                                            class="
+                                                enterprise-order-detail__production-select
+                                                enterprise-order-detail__production-select--${productionStatus}
+                                            "
+                                            data-order-id="${order.id}"
+                                        >
 
-                    <option
-                        value="ready"
-                        ${productionStatus === "ready"
-                            ? "selected"
-                            : ""}
-                    >
-                        Listo
-                    </option>
+                                            <option
+                                                value="pending"
+                                                ${
+                                                    productionStatus === "pending"
+                                                        ? "selected"
+                                                        : ""
+                                                }
+                                            >
+                                                Pendiente
+                                            </option>
 
-                </select>
-            `
-            : `
-                <strong>
-                    No requiere
-                </strong>
-            `
-    }
 
-</div>
+                                            <option
+                                                value="in_production"
+                                                ${
+                                                    productionStatus === "in_production"
+                                                        ? "selected"
+                                                        : ""
+                                                }
+                                            >
+                                                En producción
+                                            </option>
+
+
+                                            <option
+                                                value="ready"
+                                                ${
+                                                    productionStatus === "ready"
+                                                        ? "selected"
+                                                        : ""
+                                                }
+                                            >
+                                                Listo
+                                            </option>
+
+                                        </select>
+
+                                    `
+                                    : `
+
+                                        <strong>
+                                            No requiere
+                                        </strong>
+
+                                    `
+                            }
+
+                        </div>
 
                     </div>
 
                 </section>
 
 
-                <!-- PRODUCTOS -->
+                <!-- ========================================
+                     PRODUCTOS
+                ======================================== -->
 
                 <section
                     class="
@@ -1131,11 +1582,19 @@ function renderOrderDetail(order) {
                     "
                 >
 
-                    <div class="enterprise-order-detail__card-header">
+                    <div
+                        class="
+                            enterprise-order-detail__card-header
+                        "
+                    >
 
                         <div>
 
-                            <span class="enterprise-dashboard__eyebrow">
+                            <span
+                                class="
+                                    enterprise-dashboard__eyebrow
+                                "
+                            >
                                 Productos
                             </span>
 
@@ -1145,12 +1604,22 @@ function renderOrderDetail(order) {
 
                         </div>
 
-                        <i class="fa-solid fa-box"></i>
+
+                        <i
+                            class="
+                                fa-solid
+                                fa-box
+                            "
+                        ></i>
 
                     </div>
 
 
-                    <div class="enterprise-order-detail__items">
+                    <div
+                        class="
+                            enterprise-order-detail__items
+                        "
+                    >
 
                         ${itemsHTML}
 
@@ -1159,7 +1628,9 @@ function renderOrderDetail(order) {
                 </section>
 
 
-                <!-- TOTAL -->
+                <!-- ========================================
+                     RESUMEN
+                ======================================== -->
 
                 <section
                     class="
@@ -1168,11 +1639,19 @@ function renderOrderDetail(order) {
                     "
                 >
 
-                    <div class="enterprise-order-detail__card-header">
+                    <div
+                        class="
+                            enterprise-order-detail__card-header
+                        "
+                    >
 
                         <div>
 
-                            <span class="enterprise-dashboard__eyebrow">
+                            <span
+                                class="
+                                    enterprise-dashboard__eyebrow
+                                "
+                            >
                                 Resumen
                             </span>
 
@@ -1182,12 +1661,22 @@ function renderOrderDetail(order) {
 
                         </div>
 
-                        <i class="fa-solid fa-calculator"></i>
+
+                        <i
+                            class="
+                                fa-solid
+                                fa-calculator
+                            "
+                        ></i>
 
                     </div>
 
 
-                    <div class="enterprise-order-detail__totals">
+                    <div
+                        class="
+                            enterprise-order-detail__totals
+                        "
+                    >
 
                         <div>
 
@@ -1228,7 +1717,11 @@ function renderOrderDetail(order) {
                         </div>
 
 
-                        <div class="enterprise-order-detail__total">
+                        <div
+                            class="
+                                enterprise-order-detail__total
+                            "
+                        >
 
                             <span>
                                 Total
@@ -1244,7 +1737,6 @@ function renderOrderDetail(order) {
 
                 </section>
 
-
             </div>
 
         </div>
@@ -1253,7 +1745,14 @@ function renderOrderDetail(order) {
 
 }
 
-function renderOrder(order) {
+
+// ========================================
+// RENDER ORDER CARD
+// ========================================
+
+function renderOrder(
+    order
+) {
 
     const customer =
         order.customerSnapshot?.name ||
@@ -1271,8 +1770,9 @@ function renderOrder(order) {
 
 
     const total =
-        Number(order.total || 0)
-            .toFixed(2);
+        Number(
+            order.total || 0
+        ).toFixed(2);
 
 
     return `
@@ -1282,7 +1782,11 @@ function renderOrder(order) {
             data-order-id="${order.id}"
         >
 
-            <div class="enterprise-order__number">
+            <div
+                class="
+                    enterprise-order__number
+                "
+            >
 
                 <span>
                     Pedido
@@ -1295,7 +1799,11 @@ function renderOrder(order) {
             </div>
 
 
-            <div class="enterprise-order__customer">
+            <div
+                class="
+                    enterprise-order__customer
+                "
+            >
 
                 <span>
                     Cliente
@@ -1308,7 +1816,11 @@ function renderOrder(order) {
             </div>
 
 
-            <div class="enterprise-order__channel">
+            <div
+                class="
+                    enterprise-order__channel
+                "
+            >
 
                 <span>
                     Canal
@@ -1321,7 +1833,11 @@ function renderOrder(order) {
             </div>
 
 
-            <div class="enterprise-order__total">
+            <div
+                class="
+                    enterprise-order__total
+                "
+            >
 
                 <span>
                     Total
@@ -1347,13 +1863,18 @@ function renderOrder(order) {
 
 
             <button
-    type="button"
-    class="enterprise-order__action"
-    data-order-id="${order.id}"
-    aria-label="Ver pedido"
->
+                type="button"
+                class="enterprise-order__action"
+                data-order-id="${order.id}"
+                aria-label="Ver pedido"
+            >
 
-                <i class="fa-solid fa-chevron-right"></i>
+                <i
+                    class="
+                        fa-solid
+                        fa-chevron-right
+                    "
+                ></i>
 
             </button>
 

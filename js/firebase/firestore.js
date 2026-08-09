@@ -5,6 +5,7 @@ import {
     doc,
     getDoc,
     updateDoc,
+    writeBatch,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
@@ -182,6 +183,28 @@ export async function updateOrderStatus(
     );
 
 }
+export async function updateProductionOrderStatus(
+    productionOrderId,
+    status
+) {
+
+    const productionOrderRef =
+        doc(
+            db,
+            "productionOrders",
+            productionOrderId
+        );
+
+
+    await updateDoc(
+        productionOrderRef,
+        {
+            status: status,
+            updatedAt: serverTimestamp()
+        }
+    );
+
+}
 export async function updatePaymentStatus(
     orderId,
     status
@@ -207,6 +230,34 @@ export async function updateProductionStatus(
     status
 ) {
 
+    // ========================================
+    // FIND RELATED PRODUCTION ORDER
+    // ========================================
+
+    const productionOrders =
+        await getProductionOrders();
+
+
+    const productionOrder =
+        productionOrders.find(
+            order =>
+                order.orderId === orderId
+        );
+
+
+    if (!productionOrder) {
+
+        throw new Error(
+            `No se encontró productionOrder relacionado con el pedido ${orderId}`
+        );
+
+    }
+
+
+    // ========================================
+    // REFERENCES
+    // ========================================
+
     const orderRef =
         doc(
             db,
@@ -214,11 +265,57 @@ export async function updateProductionStatus(
             orderId
         );
 
-    await updateDoc(
+
+    const productionOrderRef =
+        doc(
+            db,
+            "productionOrders",
+            productionOrder.id
+        );
+
+
+    // ========================================
+    // BATCH
+    // ========================================
+
+    const batch =
+        writeBatch(db);
+
+
+    // ORDER
+    batch.update(
         orderRef,
         {
             productionStatus: status,
             updatedAt: serverTimestamp()
+        }
+    );
+
+
+    // PRODUCTION ORDER
+    batch.update(
+        productionOrderRef,
+        {
+            status: status,
+            updatedAt: serverTimestamp()
+        }
+    );
+
+
+    // ========================================
+    // COMMIT
+    // ========================================
+
+    await batch.commit();
+
+
+    console.log(
+        "✓ Estado de producción sincronizado:",
+        {
+            orderId,
+            productionOrderId:
+                productionOrder.id,
+            status
         }
     );
 
