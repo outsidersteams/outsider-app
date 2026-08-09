@@ -290,4 +290,326 @@ body {
   font-family: "Sedgwick Ave Display", cursive;
 }
 
+.enterprise-layout {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  background: #ffffff;
+  color: #000000;
+}
+
+.enterprise-layout__sidebar {
+  width: 240px;
+  min-height: 100vh;
+  min-height: 100svh;
+  flex-shrink: 0;
+  border-right: 1px solid #eeeeee;
+}
+
+.enterprise-layout__main {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.enterprise-layout__header {
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.enterprise-layout__content {
+  flex: 1;
+  min-width: 0;
+  padding: 32px;
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .enterprise-layout__sidebar {
+    width: 76px;
+  }
+  .enterprise-layout__content {
+    padding: 28px;
+  }
+}
+@media (max-width: 767px) {
+  .enterprise-layout {
+    display: block;
+    min-height: 100vh;
+    min-height: 100svh;
+  }
+  .enterprise-layout__sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    height: 100svh;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 220ms ease;
+    border-right: 1px solid #eeeeee;
+    background: #ffffff;
+  }
+  .enterprise-layout__main {
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100svh;
+  }
+  .enterprise-layout__content {
+    width: 100%;
+    padding: 24px 18px;
+  }
+  .enterprise-layout__overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 220ms ease, visibility 220ms ease;
+  }
+  .enterprise-layout.sidebar-open .enterprise-layout__sidebar {
+    transform: translateX(0);
+  }
+  .enterprise-layout.sidebar-open .enterprise-layout__overlay {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+.enterprise-sidebar {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 16px;
+  background: #ffffff;
+}
+
+.enterprise-sidebar__brand {
+  margin-bottom: 42px;
+  padding: 0 14px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.enterprise-sidebar__navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.enterprise-sidebar__bottom {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.enterprise-sidebar__link {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  gap: 12px;
+  border-radius: 10px;
+  color: #555555;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.enterprise-sidebar__link:hover {
+  background: #f5f5f5;
+  color: #000000;
+}
+
+.enterprise-sidebar__link.active {
+  background: #f1f1f1;
+  color: #000000;
+  font-weight: 600;
+}
+
+.enterprise-sidebar__logout {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 10px;
+  text-align: left;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555555;
+  background: transparent;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.enterprise-sidebar__logout:hover {
+  background: #f5f5f5;
+  color: #000000;
+}
+
+.enterprise-sidebar__icon {
+  width: 20px;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 15px;
+}
+
+.enterprise-sidebar__label {
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .enterprise-sidebar {
+    padding: 24px 10px;
+  }
+  .enterprise-sidebar__brand {
+    margin-bottom: 36px;
+    padding: 0;
+    text-align: center;
+    font-size: 18px;
+  }
+  .enterprise-sidebar__link {
+    justify-content: center;
+    padding: 0;
+    font-size: 0;
+  }
+  .enterprise-sidebar__logout {
+    padding: 0;
+    text-align: center;
+    font-size: 0;
+  }
+  .enterprise-sidebar {
+    padding: 24px 10px;
+  }
+  .enterprise-sidebar__brand {
+    margin-bottom: 36px;
+    padding: 0;
+    text-align: center;
+    font-size: 18px;
+  }
+  .enterprise-sidebar__link {
+    justify-content: center;
+    padding: 0;
+  }
+  .enterprise-sidebar__logout {
+    justify-content: center;
+    padding: 0;
+  }
+  .enterprise-sidebar__label {
+    display: none;
+  }
+  .enterprise-sidebar__icon {
+    width: auto;
+    font-size: 17px;
+  }
+}
+.enterprise-header {
+  width: 100%;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  border-bottom: 1px solid #eeeeee;
+  background: #ffffff;
+}
+
+.enterprise-header__left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.enterprise-header__menu {
+  display: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: #f5f5f5;
+  cursor: pointer;
+}
+
+.enterprise-header__title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.enterprise-header__user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.enterprise-header__avatar {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #000000;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.enterprise-header__user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.enterprise-header__user-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.enterprise-header__user-role {
+  font-size: 12px;
+  color: #777777;
+}
+
+@media (min-width: 768px) {
+  .enterprise-header__menu {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  .enterprise-header {
+    min-height: 64px;
+    padding: 0 18px;
+  }
+  .enterprise-header__menu {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #f5f5f5;
+    color: #000000;
+  }
+  .enterprise-header__title {
+    font-size: 17px;
+  }
+  .enterprise-header__user-info {
+    display: none;
+  }
+  .enterprise-header__avatar {
+    width: 36px;
+    height: 36px;
+  }
+}
+
 /*# sourceMappingURL=main.css.map */

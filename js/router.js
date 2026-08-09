@@ -11,6 +11,10 @@ import {
     checkEnterpriseAccess
 } from "./enterprise/authGuard.js";
 
+import {
+    initEnterpriseLayout
+} from "./components/enterpriseLayout.js";
+
 
 const routes = {
 
@@ -28,6 +32,8 @@ const routes = {
     "/enterprise/dashboard": EnterpriseDashboard
 
 };
+
+
 export async function navigate(path) {
 
     window.history.pushState(
@@ -36,9 +42,10 @@ export async function navigate(path) {
         path
     );
 
-    router();
+    await router();
 
 }
+
 
 export async function router() {
 
@@ -47,6 +54,7 @@ export async function router() {
     const route = routes[path];
 
     const app = document.querySelector("#app");
+
 
     if (!app) {
 
@@ -61,14 +69,18 @@ export async function router() {
 
     if (route) {
 
-
         // ========================================
         // ENTERPRISE ACCESS
         // ========================================
 
+        let routeContent;
+
+
         if (path === "/enterprise/dashboard") {
 
-            const access = await checkEnterpriseAccess();
+            const access =
+                await checkEnterpriseAccess();
+
 
             if (!access.allowed) {
 
@@ -87,6 +99,16 @@ export async function router() {
 
             }
 
+
+            routeContent = route(
+                access.profile
+            );
+
+
+        } else {
+
+            routeContent = route();
+
         }
 
 
@@ -94,16 +116,31 @@ export async function router() {
         // RENDER ROUTE
         // ========================================
 
-        app.innerHTML = route();
+        app.innerHTML = routeContent;
 
 
         // ========================================
         // ENTERPRISE LOGIN INIT
         // ========================================
 
-        if (path === "/enterprise/login") {
+        if (
+            path === "/enterprise/login"
+        ) {
 
             initEnterpriseLogin();
+
+        }
+
+
+        // ========================================
+        // ENTERPRISE LAYOUT INIT
+        // ========================================
+
+        if (
+            path === "/enterprise/dashboard"
+        ) {
+
+            initEnterpriseLayout();
 
         }
 
@@ -123,13 +160,6 @@ export async function router() {
 // ========================================
 // SPA NAVIGATION
 // ========================================
-
-window.addEventListener(
-    "popstate",
-    router
-);
-
-// Escuchar cambios de URL dentro de la SPA
 
 window.addEventListener(
     "popstate",

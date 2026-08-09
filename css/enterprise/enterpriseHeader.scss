@@ -1,0 +1,193 @@
+.enterprise-header {
+
+    width: 100%;
+    min-height: 72px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 32px;
+
+    border-bottom: 1px solid #eeeeee;
+
+    background: #ffffff;
+}
+
+
+// ========================================
+// LEFT
+// ========================================
+
+.enterprise-header__left {
+
+    display: flex;
+    align-items: center;
+
+    gap: 16px;
+}
+
+
+// ========================================
+// MENU
+// ========================================
+
+.enterprise-header__menu {
+
+    display: none;
+
+    width: 40px;
+    height: 40px;
+
+    padding: 0;
+
+    border: 0;
+    border-radius: 10px;
+
+    background: #f5f5f5;
+
+    cursor: pointer;
+}
+
+
+// ========================================
+// TITLE
+// ========================================
+
+.enterprise-header__title {
+
+    font-size: 18px;
+    font-weight: 600;
+}
+
+
+// ========================================
+// USER
+// ========================================
+
+.enterprise-header__user {
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+}
+
+
+// ========================================
+// AVATAR
+// ========================================
+
+.enterprise-header__avatar {
+
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    color: #ffffff;
+
+    background: #000000;
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+
+// ========================================
+// USER INFO
+// ========================================
+
+.enterprise-header__user-info {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 2px;
+}
+
+
+.enterprise-header__user-name {
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+
+.enterprise-header__user-role {
+
+    font-size: 12px;
+
+    color: #777777;
+}
+// ========================================
+// DESKTOP
+// ========================================
+
+@media (min-width: 768px) {
+
+    .enterprise-header__menu {
+        display: none;
+    }
+
+}
+// ========================================
+// MOBILE
+// ========================================
+
+@media (max-width: 767px) {
+
+    .enterprise-header {
+
+        min-height: 64px;
+
+        padding: 0 18px;
+
+    }
+
+
+    .enterprise-header__menu {
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        width: 40px;
+        height: 40px;
+
+        border-radius: 10px;
+
+        background: #f5f5f5;
+
+        color: #000000;
+
+    }
+
+
+    .enterprise-header__title {
+
+        font-size: 17px;
+
+    }
+
+
+    .enterprise-header__user-info {
+
+        display: none;
+
+    }
+
+
+    .enterprise-header__avatar {
+
+        width: 36px;
+        height: 36px;
+
+    }
+
+}

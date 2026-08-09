@@ -56,6 +56,10 @@ observeAuth(async (user) => {
 
     }
 
+    // Firebase ya terminó de restaurar
+    // el estado de autenticación.
+    router();
+
 });
 
 
@@ -106,4 +110,3 @@ async function testFirestore() {
 
 
 testFirestore();
-router();

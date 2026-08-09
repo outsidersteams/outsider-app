@@ -1,18 +1,28 @@
-export function EnterpriseDashboard() {
+import {
+    EnterpriseLayout
+} from "../components/enterpriseLayout.js";
 
-    return `
+export function EnterpriseDashboard(profile) {
+
+    const content = `
 
         <section class="enterprise-dashboard">
 
-            <h1>OUTSIDER ENTERPRISE</h1>
-
-            <h2>Dashboard</h2>
+            <h1>
+                Dashboard
+            </h1>
 
             <p>
-                Acceso autorizado correctamente.
+                Bienvenido, ${profile?.name || "Usuario"}.
             </p>
 
         </section>
 
     `;
+
+    return EnterpriseLayout(
+        content,
+        profile
+    );
+
 }
