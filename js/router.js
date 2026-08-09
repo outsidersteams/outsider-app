@@ -4,7 +4,8 @@ import {
 } from "./enterprise/login.js";
 
 import {
-    EnterpriseDashboard
+    EnterpriseDashboard,
+    initEnterpriseDashboard
 } from "./enterprise/dashboard.js";
 
 import {
@@ -123,13 +124,18 @@ export async function router() {
         // ENTERPRISE LOGIN INIT
         // ========================================
 
-        if (
-            path === "/enterprise/login"
-        ) {
+        if (path === "/enterprise/login") {
 
-            initEnterpriseLogin();
+    initEnterpriseLogin();
 
-        }
+}
+
+
+if (path === "/enterprise/dashboard") {
+
+    initEnterpriseDashboard();
+
+}
 
 
         // ========================================

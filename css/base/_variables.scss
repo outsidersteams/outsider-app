@@ -15,6 +15,8 @@ $color-text-muted: #6b7280;
 $color-success: #22c55e;
 $color-danger: #ef4444;
 $color-warning: #f59e0b;
+$color-surface: #f7f7f5;
+$color-surface-secondary: #FAFAFA;
 
 // Borders
 $border-color: #e5e7eb;
@@ -44,3 +46,53 @@ $font-primary:
 $font-display:
     "Sedgwick Ave Display",
     cursive;
+
+
+// ========================================
+// ORDER STATUS
+// ========================================
+
+$status-pending-bg: #fef3c7;
+$status-pending-text: #92400e;
+
+$status-confirmed-bg: #dbeafe;
+$status-confirmed-text: #1e40af;
+
+$status-processing-bg: #ede9fe;
+$status-processing-text: #6d28d9;
+
+$status-ready-bg: #dcfce7;
+$status-ready-text: #166534;
+
+$status-completed-bg: #dcfce7;
+$status-completed-text: #166534;
+
+$status-cancelled-bg: #fee2e2;
+$status-cancelled-text: #991b1b;
+// ========================================
+// PAYMENT STATUS
+// ========================================
+
+$payment-pending-bg: #fef3c7;
+$payment-pending-text: #92400e;
+
+$payment-paid-bg: #dcfce7;
+$payment-paid-text: #166534;
+
+$payment-partial-bg: #fef3c7;
+$payment-partial-text: #92400e;
+
+$payment-refunded-bg: #dbeafe;
+$payment-refunded-text: #1e40af;
+// ========================================
+// PRODUCTION STATUS
+// ========================================
+
+$production-pending-bg: #fef3c7;
+$production-pending-text: #92400e;
+
+$production-in-bg: #ede9fe;
+$production-in-text: #6d28d9;
+
+$production-ready-bg: #dcfce7;
+$production-ready-text: #166534;
