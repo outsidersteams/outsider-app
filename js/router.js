@@ -3,29 +3,29 @@ import {
     initEnterpriseLogin
 } from "./enterprise/login.js";
 
-
 import {
     EnterpriseDashboard,
     initEnterpriseDashboard
 } from "./enterprise/dashboard.js";
-
 
 import {
     EnterpriseProduction,
     initEnterpriseProduction
 } from "./enterprise/production.js";
 
-
 import {
     EnterpriseOrders,
     initEnterpriseOrders
 } from "./enterprise/orders.js";
 
+import {
+    EnterpriseProducts,
+    initEnterpriseProducts
+} from "./enterprise/products.js";
 
 import {
     checkEnterpriseAccess
 } from "./enterprise/authGuard.js";
-
 
 import {
     initEnterpriseLayout
@@ -64,7 +64,11 @@ const routes = {
 
 
     "/enterprise/orders":
-        EnterpriseOrders
+        EnterpriseOrders,
+
+
+    "/enterprise/products":
+        EnterpriseProducts
 
 };
 
@@ -73,7 +77,9 @@ const routes = {
 // NAVIGATION
 // ========================================
 
-export async function navigate(path) {
+export async function navigate(
+    path
+) {
 
     window.history.pushState(
         {},
@@ -147,7 +153,8 @@ export async function router() {
     const isEnterpriseRoute =
         path === "/enterprise/dashboard" ||
         path === "/enterprise/production" ||
-        path === "/enterprise/orders";
+        path === "/enterprise/orders" ||
+        path === "/enterprise/products";
 
 
     let routeContent;
@@ -222,11 +229,14 @@ export async function router() {
     // ========================================
 
     /*
-        Orders necesita EnterpriseLayout
-        antes de inicializar su lógica.
+        Orders utiliza EnterpriseLayout
+        desde el router.
 
-        Dashboard ya inicializa el layout
-        internamente, por eso no lo duplicamos aquí.
+        Products utiliza EnterpriseLayout
+        internamente, igual que Dashboard.
+
+        Por eso Products NO se inicializa
+        aquí para evitar duplicar el Layout.
     */
 
     if (
@@ -288,6 +298,21 @@ export async function router() {
     ) {
 
         await initEnterpriseOrders();
+
+    }
+
+
+    // ========================================
+    // ENTERPRISE PRODUCTS INIT
+    // ========================================
+
+    if (
+        path === "/enterprise/products"
+    ) {
+
+        await initEnterpriseProducts(
+            enterpriseProfile
+        );
 
     }
 
