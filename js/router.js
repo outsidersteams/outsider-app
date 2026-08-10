@@ -15,6 +15,13 @@ import {
     initEnterpriseProduction
 } from "./enterprise/production.js";
 
+
+import {
+    EnterpriseOrders,
+    initEnterpriseOrders
+} from "./enterprise/orders.js";
+
+
 import {
     checkEnterpriseAccess
 } from "./enterprise/authGuard.js";
@@ -53,7 +60,11 @@ const routes = {
 
 
     "/enterprise/production":
-        EnterpriseProduction
+        EnterpriseProduction,
+
+
+    "/enterprise/orders":
+        EnterpriseOrders
 
 };
 
@@ -135,54 +146,67 @@ export async function router() {
 
     const isEnterpriseRoute =
         path === "/enterprise/dashboard" ||
-        path === "/enterprise/production";
+        path === "/enterprise/production" ||
+        path === "/enterprise/orders";
 
-let routeContent;
-let enterpriseProfile = null;
 
+    let routeContent;
+
+    let enterpriseProfile = null;
+
+
+    // ========================================
+    // ENTERPRISE ROUTES
+    // ========================================
 
     if (isEnterpriseRoute) {
 
-    const access =
-        await checkEnterpriseAccess();
+        const access =
+            await checkEnterpriseAccess();
 
 
-    if (!access.allowed) {
+        if (!access.allowed) {
 
-        console.warn(
-            "Acceso Enterprise rechazado:",
-            access.reason
-        );
-
-
-        window.history.replaceState(
-            {},
-            "",
-            "/enterprise/login"
-        );
+            console.warn(
+                "Acceso Enterprise rechazado:",
+                access.reason
+            );
 
 
-        return router();
+            window.history.replaceState(
+                {},
+                "",
+                "/enterprise/login"
+            );
+
+
+            return router();
+
+        }
+
+
+        enterpriseProfile =
+            access.profile;
+
+
+        routeContent =
+            await route(
+                enterpriseProfile
+            );
 
     }
 
 
-    enterpriseProfile =
-        access.profile;
+    // ========================================
+    // PUBLIC ROUTES
+    // ========================================
 
+    else {
 
-    routeContent =
-        await route(
-            access.profile
-        );
+        routeContent =
+            route();
 
-
-} else {
-
-    routeContent =
-        route();
-
-}
+    }
 
 
     // ========================================
@@ -192,15 +216,43 @@ let enterpriseProfile = null;
     app.innerHTML =
         routeContent;
 
-if (
-    path === "/enterprise/production"
-) {
 
-    initEnterpriseProduction(
-        enterpriseProfile
-    );
+    // ========================================
+    // ENTERPRISE LAYOUT
+    // ========================================
 
-}
+    /*
+        Orders necesita EnterpriseLayout
+        antes de inicializar su lógica.
+
+        Dashboard ya inicializa el layout
+        internamente, por eso no lo duplicamos aquí.
+    */
+
+    if (
+        path === "/enterprise/orders"
+    ) {
+
+        initEnterpriseLayout();
+
+    }
+
+
+    // ========================================
+    // ENTERPRISE PRODUCTION INIT
+    // ========================================
+
+    if (
+        path === "/enterprise/production"
+    ) {
+
+        initEnterpriseProduction(
+            enterpriseProfile
+        );
+
+    }
+
+
     // ========================================
     // ENTERPRISE LOGIN INIT
     // ========================================
@@ -228,15 +280,14 @@ if (
 
 
     // ========================================
-    // ENTERPRISE LAYOUT INIT
+    // ENTERPRISE ORDERS INIT
     // ========================================
 
     if (
-        path === "/enterprise/dashboard" ||
-        path === "/enterprise/production"
+        path === "/enterprise/orders"
     ) {
 
-        initEnterpriseLayout();
+        await initEnterpriseOrders();
 
     }
 

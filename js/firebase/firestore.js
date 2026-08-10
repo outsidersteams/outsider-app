@@ -5,6 +5,7 @@ import {
     doc,
     getDoc,
     updateDoc,
+    addDoc,
     writeBatch,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
@@ -161,6 +162,215 @@ export async function getOrder(orderId) {
         id: snapshot.id,
         ...snapshot.data()
     };
+
+}
+// ========================================
+// GET ORDER COMMENTS
+// ========================================
+
+export async function getOrderComments(
+    orderId
+) {
+
+    const commentsRef =
+        collection(
+            db,
+            "orders",
+            orderId,
+            "comments"
+        );
+
+
+    const snapshot =
+        await getDocs(
+            commentsRef
+        );
+
+
+    const comments =
+        snapshot.docs.map(
+            commentDoc => ({
+
+                id:
+                    commentDoc.id,
+
+                ...commentDoc.data()
+
+            })
+        );
+
+
+    // ========================================
+    // SORT BY DATE
+    // ========================================
+
+    comments.sort(
+        (
+            a,
+            b
+        ) => {
+
+            const dateA =
+                getTimestampValue(
+                    a.createdAt
+                );
+
+
+            const dateB =
+                getTimestampValue(
+                    b.createdAt
+                );
+
+
+            return dateA - dateB;
+
+        }
+    );
+
+
+    return comments;
+
+}
+
+
+// ========================================
+// ADD ORDER COMMENT
+// ========================================
+
+export async function addOrderComment(
+    orderId,
+    text,
+    user
+) {
+
+    const cleanText =
+        String(
+            text || ""
+        ).trim();
+
+
+    if (!cleanText) {
+
+        throw new Error(
+            "El comentario no puede estar vacío."
+        );
+
+    }
+
+
+    const commentsRef =
+        collection(
+            db,
+            "orders",
+            orderId,
+            "comments"
+        );
+
+
+    const commentData = {
+
+        text:
+            cleanText,
+
+        createdAt:
+            serverTimestamp(),
+
+        createdBy:
+            user?.uid ||
+            user?.id ||
+            null,
+
+        createdByName:
+            user?.displayName ||
+            user?.name ||
+            user?.email ||
+            "Usuario"
+
+    };
+
+
+    const commentRef =
+        await addDoc(
+            commentsRef,
+            commentData
+        );
+
+
+    console.log(
+        "✓ Comentario agregado:",
+        {
+            orderId,
+            commentId:
+                commentRef.id
+        }
+    );
+
+
+    return {
+
+        id:
+            commentRef.id,
+
+        ...commentData
+
+    };
+
+}
+
+
+// ========================================
+// TIMESTAMP HELPER
+// ========================================
+
+function getTimestampValue(
+    value
+) {
+
+    if (!value) {
+
+        return 0;
+
+    }
+
+
+    if (
+        typeof value.toMillis ===
+        "function"
+    ) {
+
+        return value.toMillis();
+
+    }
+
+
+    if (
+        value.seconds !== undefined
+    ) {
+
+        return (
+            Number(
+                value.seconds
+            ) * 1000
+        );
+
+    }
+
+
+    const date =
+        new Date(
+            value
+        );
+
+
+    const time =
+        date.getTime();
+
+
+    return Number.isNaN(
+        time
+    )
+        ? 0
+        : time;
 
 }
 export async function updateOrderStatus(
