@@ -64,6 +64,14 @@ export function initEnterpriseLayout() {
         document.querySelector(
             "#enterprise-layout-overlay"
         );
+        console.log(
+    "ENTERPRISE LAYOUT INIT",
+    {
+        layout,
+        menuButton,
+        overlay
+    }
+);
 
     if (
         !layout ||

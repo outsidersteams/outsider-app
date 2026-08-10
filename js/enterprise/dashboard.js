@@ -95,9 +95,6 @@ export function EnterpriseDashboard(profile) {
 
 export function initEnterpriseDashboard() {
 
-    initEnterpriseLayout();
-
-
     const params =
         new URLSearchParams(
             window.location.search
@@ -129,21 +126,21 @@ export function initEnterpriseDashboard() {
 
 function initOrderActions() {
 
-    const buttons =
+    const cards =
         document.querySelectorAll(
-            ".enterprise-order__action"
+            ".enterprise-order"
         );
 
 
-    buttons.forEach(
-        button => {
+    cards.forEach(
+        card => {
 
-            button.addEventListener(
+            card.addEventListener(
                 "click",
                 () => {
 
                     const orderId =
-                        button.dataset.orderId;
+                        card.dataset.orderId;
 
 
                     if (!orderId) {
@@ -167,6 +164,41 @@ function initOrderActions() {
 
 
                     initEnterpriseDashboard();
+
+                }
+            );
+
+
+            // ========================================
+            // ACCESSIBILITY
+            // ========================================
+
+            card.setAttribute(
+                "role",
+                "button"
+            );
+
+
+            card.setAttribute(
+                "tabindex",
+                "0"
+            );
+
+
+            card.addEventListener(
+                "keydown",
+                event => {
+
+                    if (
+                        event.key === "Enter" ||
+                        event.key === " "
+                    ) {
+
+                        event.preventDefault();
+
+                        card.click();
+
+                    }
 
                 }
             );
