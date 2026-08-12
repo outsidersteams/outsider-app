@@ -317,6 +317,25 @@ export async function createInventory(
 
 
     // ====================================
+    // VALIDAR DISPONIBILIDAD EN CATÁLOGO
+    // ====================================
+
+    const catalogAvailable =
+        product.active === true &&
+        variant.active === true &&
+        size.active === true;
+
+
+    if (!catalogAvailable) {
+
+        throw new Error(
+            "Esta variante no está disponible para ingresar inventario."
+        );
+
+    }
+
+
+    // ====================================
     // COMPROBAR INVENTARIO EXISTENTE
     // ====================================
 
@@ -370,11 +389,7 @@ export async function createInventory(
     // ====================================
 
     const catalogStatus =
-        product.active === true &&
-        variant.active === true &&
-        size.active === true
-            ? "active"
-            : "catalog_removed";
+        "active";
 
 
     // ====================================
