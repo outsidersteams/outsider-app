@@ -1,0 +1,306 @@
+@use "../base/variables" as *;
+
+// ========================================
+// OUTSIDER — CUSTOMER NEW
+// ========================================
+
+.enterprise-customers {
+
+    &__new {
+        display: flex;
+        flex-direction: column;
+        gap: $space-lg;
+        width: 100%;
+        animation: customerNewIn 180ms ease-out;
+    }
+
+    &__new-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: $space-lg;
+
+        h2 {
+            margin: 5px 0 0;
+            color: $color-text;
+            font-size: 24px;
+            line-height: 1.2;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        p {
+            max-width: 680px;
+            margin: 7px 0 0;
+            color: $color-text-muted;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+    }
+
+    &__new-close {
+        width: 36px;
+        height: 36px;
+        flex: 0 0 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid $border-color;
+        border-radius: $radius-sm;
+        background: $color-white;
+        color: $color-text-muted;
+        cursor: pointer;
+        transition:
+            background 160ms ease,
+            color 160ms ease,
+            border-color 160ms ease;
+
+        &:hover {
+            background: $color-surface-secondary;
+            color: $color-text;
+        }
+    }
+
+    &__new-card {
+        overflow: hidden;
+        background: $color-white;
+        border: 1px solid $border-color;
+        border-radius: $radius-md;
+    }
+
+    &__new-card-header {
+        padding: $space-md $space-lg;
+        border-bottom: 1px solid $border-color;
+
+        h3 {
+            margin: 0;
+            color: $color-text;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        span {
+            display: block;
+            margin-top: 4px;
+            color: $color-text-muted;
+            font-size: 12px;
+        }
+    }
+
+    &__new-fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: $space-md;
+        padding: $space-lg;
+    }
+
+    &__new-field {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+
+        &--full {
+            grid-column: 1 / -1;
+        }
+
+        > span {
+            color: $color-text;
+            font-size: 12px;
+            font-weight: 600;
+
+            b {
+                color: $color-danger;
+                font-weight: 700;
+            }
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid $border-color;
+            border-radius: $radius-sm;
+            background: $color-white;
+            color: $color-text;
+            font: inherit;
+            font-size: 13px;
+            line-height: 1.4;
+            outline: none;
+            transition:
+                border-color 160ms ease,
+                box-shadow 160ms ease,
+                background 160ms ease;
+        }
+
+        input,
+        select {
+            min-height: 42px;
+            padding: 0 12px;
+        }
+
+        textarea {
+            min-height: 96px;
+            padding: 10px 12px;
+            resize: vertical;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: $color-text-muted;
+            opacity: 0.7;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: $color-purple;
+            box-shadow: 0 0 0 3px rgba($color-purple, 0.09);
+        }
+
+        input:invalid:not(:placeholder-shown),
+        select:invalid {
+            border-color: rgba($color-danger, 0.65);
+        }
+    }
+
+    &__new-feedback {
+        min-height: 0;
+        display: none;
+        align-items: center;
+        gap: $space-sm;
+        padding: 11px 13px;
+        border: 1px solid transparent;
+        border-radius: $radius-sm;
+        font-size: 12px;
+        line-height: 1.45;
+
+        &.is-error,
+        &.is-success {
+            display: flex;
+        }
+
+        &.is-error {
+            border-color: rgba($color-danger, 0.22);
+            background: rgba($color-danger, 0.06);
+            color: $color-danger;
+        }
+
+        &.is-success {
+            border-color: rgba($color-success, 0.22);
+            background: rgba($color-success, 0.06);
+            color: $color-success;
+        }
+
+        i {
+            flex: 0 0 auto;
+        }
+    }
+
+    &__new-actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: $space-sm;
+    }
+
+    &__new-cancel,
+    &__new-submit {
+        min-height: 40px;
+        padding: 0 16px;
+        border-radius: $radius-sm;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+            background 160ms ease,
+            border-color 160ms ease,
+            color 160ms ease,
+            opacity 160ms ease;
+    }
+
+    &__new-cancel {
+        border: 1px solid $border-color;
+        background: $color-white;
+        color: $color-text-muted;
+
+        &:hover {
+            background: $color-surface-secondary;
+            color: $color-text;
+        }
+    }
+
+    &__new-submit {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 1px solid $color-purple;
+        background: $color-purple;
+        color: $color-white;
+
+        &:hover {
+            opacity: 0.92;
+        }
+
+        &:disabled {
+            opacity: 0.65;
+            cursor: wait;
+        }
+    }
+}
+
+@media (max-width: 700px) {
+
+    .enterprise-customers {
+
+        &__new {
+            gap: $space-md;
+        }
+
+        &__new-header {
+            gap: $space-md;
+
+            h2 {
+                font-size: 20px;
+            }
+        }
+
+        &__new-fields {
+            grid-template-columns: 1fr;
+            padding: $space-md;
+        }
+
+        &__new-field--full {
+            grid-column: auto;
+        }
+
+        &__new-card-header {
+            padding: $space-md;
+        }
+
+        &__new-actions {
+            flex-direction: column-reverse;
+            align-items: stretch;
+        }
+
+        &__new-cancel,
+        &__new-submit {
+            width: 100%;
+        }
+    }
+}
+
+@keyframes customerNewIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

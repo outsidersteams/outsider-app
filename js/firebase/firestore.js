@@ -95,6 +95,281 @@ export async function createProduct(
 
 }
 
+
+// ========================================
+// CUSTOMERS
+// ========================================
+
+const CUSTOMER_SOURCES = [
+    "web",
+    "marketplace",
+    "instagram",
+    "tiktok",
+    "whatsapp",
+    "referral",
+    "event",
+    "physical_store",
+    "other"
+];
+
+function validateCustomerSource(source) {
+
+    if (!source) {
+        return;
+    }
+
+    if (!CUSTOMER_SOURCES.includes(source)) {
+        throw new Error(
+            "El origen del cliente no es válido."
+        );
+    }
+
+}
+
+function normalizeCustomerData(
+    customerData = {}
+) {
+
+    const name =
+        String(
+            customerData.name || ""
+        ).trim();
+
+    const phone =
+        String(
+            customerData.phone || ""
+        ).trim();
+
+    const email =
+        String(
+            customerData.email || ""
+        ).trim();
+
+    const acquisitionSource =
+        String(
+            customerData.acquisitionSource || ""
+        ).trim();
+
+    if (!name) {
+        throw new Error(
+            "El nombre del cliente es obligatorio."
+        );
+    }
+
+    if (!phone) {
+        throw new Error(
+            "El teléfono del cliente es obligatorio."
+        );
+    }
+
+    validateCustomerSource(
+        acquisitionSource
+    );
+
+    const address =
+        customerData.address &&
+        typeof customerData.address === "object"
+            ? {
+                line1:
+                    String(customerData.address.line1 || "").trim(),
+                line2:
+                    String(customerData.address.line2 || "").trim(),
+                city:
+                    String(customerData.address.city || "").trim(),
+                department:
+                    String(customerData.address.department || "").trim(),
+                country:
+                    String(customerData.address.country || "").trim(),
+                postalCode:
+                    String(customerData.address.postalCode || "").trim()
+            }
+            : {
+                line1: "",
+                line2: "",
+                city: "",
+                department: "",
+                country: "",
+                postalCode: ""
+            };
+
+    return {
+        name,
+        phone,
+        email,
+        address,
+        notes:
+            String(customerData.notes || "").trim(),
+        acquisitionSource:
+            acquisitionSource || null,
+        active:
+            customerData.active !== false
+    };
+
+}
+
+
+// ========================================
+// GET CUSTOMER
+// ========================================
+
+export async function getCustomer(
+    customerId
+) {
+
+    if (!customerId) {
+        throw new Error(
+            "El customerId es obligatorio."
+        );
+    }
+
+    const customerRef =
+        doc(
+            db,
+            "customers",
+            customerId
+        );
+
+    const snapshot =
+        await getDoc(
+            customerRef
+        );
+
+    if (!snapshot.exists()) {
+        return null;
+    }
+
+    return {
+        id:
+            snapshot.id,
+        ...snapshot.data()
+    };
+
+}
+
+
+// ========================================
+// CREATE CUSTOMER
+// ========================================
+
+export async function createCustomer(
+    customerData
+) {
+
+    const data =
+        normalizeCustomerData(
+            customerData
+        );
+
+    const customersRef =
+        collection(
+            db,
+            "customers"
+        );
+
+    const customerRef =
+        await addDoc(
+            customersRef,
+            {
+                ...data,
+                createdAt:
+                    serverTimestamp(),
+                updatedAt:
+                    serverTimestamp()
+            }
+        );
+
+    console.log(
+        "✓ Cliente creado:",
+        customerRef.id
+    );
+
+    return customerRef.id;
+
+}
+
+
+// ========================================
+// UPDATE CUSTOMER
+// ========================================
+
+export async function updateCustomer(
+    customerId,
+    customerData
+) {
+
+    if (!customerId) {
+        throw new Error(
+            "El customerId es obligatorio."
+        );
+    }
+
+    const data =
+        normalizeCustomerData(
+            customerData
+        );
+
+    const customerRef =
+        doc(
+            db,
+            "customers",
+            customerId
+        );
+
+    const snapshot =
+        await getDoc(
+            customerRef
+        );
+
+    if (!snapshot.exists()) {
+        throw new Error(
+            "El cliente no existe."
+        );
+    }
+
+    await updateDoc(
+        customerRef,
+        {
+            ...data,
+            updatedAt:
+                serverTimestamp()
+        }
+    );
+
+    console.log(
+        "✓ Cliente actualizado:",
+        customerId
+    );
+
+}
+
+
+// ========================================
+// CUSTOMER SOURCE LABEL
+// ========================================
+
+export function getCustomerSourceLabel(
+    source
+) {
+
+    const labels = {
+        web: "Web",
+        marketplace: "Marketplace",
+        instagram: "Instagram",
+        tiktok: "TikTok",
+        whatsapp: "WhatsApp",
+        referral: "Referido",
+        event: "Evento",
+        physical_store: "Tienda física",
+        other: "Otro"
+    };
+
+    return (
+        labels[source] ||
+        "Sin especificar"
+    );
+
+}
+
 export async function getCustomers() {
 
     const customersRef =

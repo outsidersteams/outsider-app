@@ -27,6 +27,10 @@ import {
     initEnterpriseInventory
 } from "./enterprise/inventory.js";
 import {
+    EnterpriseCustomers,
+    initEnterpriseCustomers
+} from "./enterprise/customers.js";
+import {
     checkEnterpriseAccess
 } from "./enterprise/authGuard.js";
 
@@ -73,6 +77,8 @@ const routes = {
         EnterpriseProducts,
     "/enterprise/inventory":
     EnterpriseInventory,
+    "/enterprise/customers":
+    EnterpriseCustomers,
 
 };
 
@@ -159,7 +165,8 @@ export async function router() {
     path === "/enterprise/production" ||
     path === "/enterprise/orders" ||
     path === "/enterprise/products" ||
-    path === "/enterprise/inventory";
+    path === "/enterprise/inventory" ||
+    path === "/enterprise/customers";
 
 
     let routeContent;
@@ -332,6 +339,19 @@ if (
 ) {
 
     initEnterpriseInventory(
+        enterpriseProfile
+    );
+
+}
+// ========================================
+// ENTERPRISE CUSTOMERS INIT
+// ========================================
+
+if (
+    path === "/enterprise/customers"
+) {
+
+    await initEnterpriseCustomers(
         enterpriseProfile
     );
 
