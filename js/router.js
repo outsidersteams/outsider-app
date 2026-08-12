@@ -22,7 +22,10 @@ import {
     EnterpriseProducts,
     initEnterpriseProducts
 } from "./enterprise/products.js";
-
+import {
+    EnterpriseInventory,
+    initEnterpriseInventory
+} from "./enterprise/inventory.js";
 import {
     checkEnterpriseAccess
 } from "./enterprise/authGuard.js";
@@ -68,6 +71,8 @@ const routes = {
 
     "/enterprise/products":
         EnterpriseProducts,
+    "/enterprise/inventory":
+    EnterpriseInventory,
 
 };
 
@@ -149,11 +154,12 @@ export async function router() {
     // ENTERPRISE ACCESS
     // ========================================
 
-    const isEnterpriseRoute =
-        path === "/enterprise/dashboard" ||
-        path === "/enterprise/production" ||
-        path === "/enterprise/orders" ||
-        path === "/enterprise/products";
+   const isEnterpriseRoute =
+    path === "/enterprise/dashboard" ||
+    path === "/enterprise/production" ||
+    path === "/enterprise/orders" ||
+    path === "/enterprise/products" ||
+    path === "/enterprise/inventory";
 
 
     let routeContent;
@@ -317,6 +323,19 @@ export async function router() {
         );
 
     }
+    // ========================================
+// ENTERPRISE INVENTORY INIT
+// ========================================
+
+if (
+    path === "/enterprise/inventory"
+) {
+
+    initEnterpriseInventory(
+        enterpriseProfile
+    );
+
+}
 
 }
 

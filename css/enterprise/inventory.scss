@@ -1,0 +1,2249 @@
+// ========================================
+// OUTSIDER — ENTERPRISE INVENTORY
+// ========================================
+
+@use "../base/variables" as *;
+
+
+// ========================================
+// INVENTORY — BASE
+// ========================================
+
+.enterprise-inventory {
+
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+
+    color: $color-text;
+    font-family: $font-primary;
+}
+
+
+// ========================================
+// HEADER
+// ========================================
+
+.enterprise-inventory__header {
+
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $space-lg;
+
+    margin-bottom: $space-xl;
+}
+
+
+.enterprise-inventory__header h1 {
+
+    margin: 0;
+
+    font-size: 32px;
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+}
+
+
+.enterprise-inventory__header p {
+
+    margin: $space-sm 0 0;
+
+    color: $color-text-muted;
+
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+
+// ========================================
+// CONTENT
+// ========================================
+
+.enterprise-inventory__content {
+
+    width: 100%;
+}
+
+
+// ========================================
+// INVENTORY LIST
+// ========================================
+
+.enterprise-inventory__list {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(0, 1fr)
+        );
+
+    gap: $space-lg;
+}
+
+
+// ========================================
+// CARD
+// ========================================
+
+.enterprise-inventory__card {
+
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+
+    padding: $space-lg;
+
+    background: $color-white;
+
+    border: 1px solid $border-color;
+    border-radius: $radius-md;
+
+    box-shadow:
+        0 1px 2px rgba(
+            0,
+            0,
+            0,
+            0.03
+        );
+
+    transition:
+        transform 160ms ease,
+        box-shadow 160ms ease,
+        border-color 160ms ease;
+}
+
+
+.enterprise-inventory__card:hover {
+
+    transform: translateY(-2px);
+
+    border-color: darken(
+        $border-color,
+        4%
+    );
+
+    box-shadow:
+        0 8px 24px rgba(
+            0,
+            0,
+            0,
+            0.06
+        );
+}
+
+
+// ========================================
+// CARD MAIN
+// ========================================
+
+.enterprise-inventory__card-main {
+
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $space-lg;
+}
+
+
+.enterprise-inventory__card-main h2 {
+
+    margin: 0;
+
+    font-size: 19px;
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+
+.enterprise-inventory__card-main p {
+
+    margin: $space-xs 0 0;
+
+    color: $color-text-muted;
+
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+
+// ========================================
+// STOCK
+// ========================================
+
+.enterprise-inventory__stock {
+
+    flex: 0 0 auto;
+
+    min-width: 72px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+
+    text-align: right;
+}
+
+
+.enterprise-inventory__stock strong {
+
+    font-size: 28px;
+    line-height: 1;
+
+    font-weight: 700;
+
+    letter-spacing: -0.03em;
+}
+
+
+.enterprise-inventory__stock span {
+
+    margin-top: 5px;
+
+    color: $color-text-muted;
+
+    font-size: 11px;
+    line-height: 1;
+
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+
+// ========================================
+// CARD META
+// ========================================
+
+.enterprise-inventory__card-meta {
+
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-sm;
+
+    margin-top: $space-lg;
+    padding-top: $space-md;
+
+    border-top: 1px solid $border-color;
+
+    color: $color-text-muted;
+
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+
+.enterprise-inventory__card-meta span {
+
+    min-width: 0;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+
+// ========================================
+// CARD ACTION
+// ========================================
+
+.enterprise-inventory__card-action {
+
+    width: 100%;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-sm;
+
+    margin-top: $space-md;
+    padding: 11px 14px;
+
+    border: 1px solid $border-color;
+    border-radius: $radius-sm;
+
+    background: $color-white;
+
+    color: $color-text;
+
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 160ms ease,
+        border-color 160ms ease,
+        color 160ms ease;
+}
+
+
+.enterprise-inventory__card-action:hover {
+
+    background: $color-surface;
+
+    border-color: $color-purple;
+
+    color: $color-purple;
+}
+
+
+.enterprise-inventory__card-action i {
+
+    font-size: 12px;
+}
+
+
+// ========================================
+// LOADING / EMPTY / ERROR
+// ========================================
+
+.enterprise-inventory__loading,
+.enterprise-inventory__empty,
+.enterprise-inventory__error {
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 240px;
+
+    padding: $space-xl;
+
+    border: 1px dashed $border-color;
+    border-radius: $radius-md;
+
+    background: $color-surface-secondary;
+
+    text-align: center;
+}
+
+
+.enterprise-inventory__empty h2,
+.enterprise-inventory__error h2 {
+
+    margin: 0;
+
+    font-size: 20px;
+    line-height: 1.3;
+}
+
+
+.enterprise-inventory__empty p,
+.enterprise-inventory__error p {
+
+    max-width: 460px;
+
+    margin: $space-sm 0 0;
+
+    color: $color-text-muted;
+
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+
+.enterprise-inventory__error {
+
+    border-color:
+        rgba(
+            $color-danger,
+            0.25
+        );
+
+    background:
+        rgba(
+            $color-danger,
+            0.03
+        );
+}
+
+
+
+// ========================================
+// DETAIL
+// ========================================
+
+.enterprise-inventory__detail {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: $space-lg;
+}
+
+
+// ========================================
+// BACK
+// ========================================
+
+.enterprise-inventory__back {
+
+    align-self: flex-start;
+
+    display: inline-flex;
+    align-items: center;
+    gap: $space-sm;
+
+    padding: 0;
+
+    border: 0;
+
+    background: transparent;
+
+    color: $color-text-muted;
+
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        color 160ms ease;
+}
+
+
+.enterprise-inventory__back:hover {
+
+    color: $color-purple;
+}
+
+
+// ========================================
+// DETAIL HEADER
+// ========================================
+
+.enterprise-inventory__detail-header {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-xl;
+
+    padding: $space-xl;
+
+    background: $color-white;
+
+    border: 1px solid $border-color;
+    border-radius: $radius-md;
+
+    box-shadow:
+        0 1px 2px rgba(
+            0,
+            0,
+            0,
+            0.03
+        );
+}
+
+
+.enterprise-inventory__detail-header > div:first-child {
+
+    min-width: 0;
+}
+
+
+.enterprise-inventory__detail-header > div:first-child > span {
+
+    display: block;
+
+    margin-bottom: $space-xs;
+
+    color: $color-text-muted;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+
+.enterprise-inventory__detail-header h2 {
+
+    margin: 0;
+
+    font-size: 28px;
+    line-height: 1.2;
+    font-weight: 700;
+
+    letter-spacing: -0.03em;
+}
+
+
+.enterprise-inventory__detail-header p {
+
+    margin: $space-xs 0 0;
+
+    color: $color-text-muted;
+
+    font-size: 15px;
+}
+
+
+// ========================================
+// DETAIL STOCK
+// ========================================
+
+.enterprise-inventory__detail-stock {
+
+    flex: 0 0 auto;
+
+    min-width: 130px;
+
+    padding-left: $space-xl;
+
+    border-left: 1px solid $border-color;
+
+    text-align: right;
+}
+
+
+.enterprise-inventory__detail-stock strong {
+
+    display: block;
+
+    font-size: 42px;
+    line-height: 1;
+
+    font-weight: 700;
+
+    letter-spacing: -0.04em;
+}
+
+
+.enterprise-inventory__detail-stock span {
+
+    display: block;
+
+    margin-top: $space-xs;
+
+    color: $color-text-muted;
+
+    font-size: 12px;
+
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+
+// ========================================
+// DETAIL INFO
+// ========================================
+
+.enterprise-inventory__detail-info {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            4,
+            minmax(0, 1fr)
+        );
+
+    background: $color-white;
+
+    border: 1px solid $border-color;
+    border-radius: $radius-md;
+
+    overflow: hidden;
+}
+
+
+.enterprise-inventory__detail-info > div {
+
+    min-width: 0;
+
+    padding: $space-lg;
+
+    border-right: 1px solid $border-color;
+}
+
+
+.enterprise-inventory__detail-info > div:last-child {
+
+    border-right: 0;
+}
+
+
+.enterprise-inventory__detail-info span {
+
+    display: block;
+
+    margin-bottom: $space-xs;
+
+    color: $color-text-muted;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+
+.enterprise-inventory__detail-info strong {
+
+    display: block;
+
+    overflow: hidden;
+
+    color: $color-text;
+
+    font-size: 15px;
+    line-height: 1.4;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+// ========================================
+// DETAIL ACTIONS
+// ========================================
+
+.enterprise-inventory__detail-actions {
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: $space-sm;
+}
+
+
+.enterprise-inventory__action {
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-sm;
+
+    min-height: 42px;
+
+    padding: 0 $space-md;
+
+    border: 1px solid $color-purple;
+    border-radius: $radius-sm;
+
+    background: $color-purple;
+
+    color: $color-white;
+
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 160ms ease,
+        border-color 160ms ease,
+        transform 160ms ease;
+}
+
+
+.enterprise-inventory__action:hover {
+
+    background: $color-purple-light;
+    border-color: $color-purple-light;
+
+    transform: translateY(-1px);
+}
+
+
+// ========================================
+// EXIT ACTION
+// ========================================
+
+.enterprise-inventory__action--exit {
+
+    border-color: $color-danger;
+
+    background: $color-danger;
+
+    color: $color-white;
+}
+
+
+.enterprise-inventory__action--exit:hover {
+
+    border-color: darken(
+        $color-danger,
+        8%
+    );
+
+    background: darken(
+        $color-danger,
+        8%
+    );
+}
+
+
+// ========================================
+// EXIT FORM
+// ========================================
+
+.enterprise-inventory__exit-form {
+
+    background: $color-white;
+
+    border: 1px solid
+        rgba(
+            $color-danger,
+            0.22
+        );
+
+    border-radius: $radius-md;
+
+    overflow: hidden;
+}
+
+
+.enterprise-inventory__exit-form[hidden] {
+
+    display: none;
+}
+
+
+.enterprise-inventory__exit-form-header {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: $space-lg;
+
+    border-bottom: 1px solid
+        rgba(
+            $color-danger,
+            0.14
+        );
+
+    background:
+        rgba(
+            $color-danger,
+            0.025
+        );
+}
+
+
+.enterprise-inventory__exit-form-header span {
+
+    display: block;
+
+    margin-bottom: $space-xs;
+
+    color: $color-danger;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+
+.enterprise-inventory__exit-form-header h3 {
+
+    margin: 0;
+
+    font-size: 18px;
+    line-height: 1.3;
+}
+
+
+.enterprise-inventory__exit-close {
+
+    width: 34px;
+    height: 34px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 0;
+    border-radius: $radius-sm;
+
+    background: transparent;
+
+    color: $color-text-muted;
+
+    cursor: pointer;
+
+    transition:
+        background 160ms ease,
+        color 160ms ease;
+}
+
+
+.enterprise-inventory__exit-close:hover {
+
+    background:
+        rgba(
+            $color-danger,
+            0.08
+        );
+
+    color: $color-danger;
+}
+
+
+.enterprise-inventory__exit-form-body {
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(150px, 0.7fr)
+        minmax(160px, 0.8fr)
+        minmax(200px, 1fr)
+        minmax(240px, 1.5fr);
+
+    gap: $space-md;
+
+    padding: $space-lg;
+}
+
+
+.enterprise-inventory__exit-stock-reference {
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    min-height: 42px;
+
+    padding: 10px 12px;
+
+    border: 1px solid $border-color;
+    border-radius: $radius-sm;
+
+    background: $color-surface;
+}
+
+
+.enterprise-inventory__exit-stock-reference span {
+
+    color: $color-text-muted;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+
+.enterprise-inventory__exit-stock-reference strong {
+
+    margin-top: 3px;
+
+    font-size: 18px;
+    line-height: 1.1;
+}
+
+
+.enterprise-inventory__exit-form-body label {
+
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+}
+
+
+.enterprise-inventory__exit-form-body label > span {
+
+    color: $color-text-muted;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+.enterprise-inventory__exit-form-body input,
+.enterprise-inventory__exit-form-body select,
+.enterprise-inventory__exit-form-body textarea {
+
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 10px 12px;
+
+    border: 1px solid $border-color;
+    border-radius: $radius-sm;
+
+    background: $color-white;
+
+    color: $color-text;
+
+    font: inherit;
+    font-size: 14px;
+
+    outline: none;
+
+    transition:
+        border-color 160ms ease,
+        box-shadow 160ms ease;
+}
+
+
+.enterprise-inventory__exit-form-body textarea {
+
+    resize: vertical;
+}
+
+
+.enterprise-inventory__exit-form-body input:focus,
+.enterprise-inventory__exit-form-body select:focus,
+.enterprise-inventory__exit-form-body textarea:focus {
+
+    border-color: $color-danger;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(
+            $color-danger,
+            0.10
+        );
+}
+
+
+.enterprise-inventory__exit-form-actions {
+
+    grid-column: 1 / -1;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: $space-sm;
+
+    padding-top: $space-sm;
+}
+
+
+.enterprise-inventory__exit-cancel,
+.enterprise-inventory__exit-submit {
+
+    min-height: 40px;
+
+    padding: 0 $space-md;
+
+    border-radius: $radius-sm;
+
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+.enterprise-inventory__exit-cancel {
+
+    border: 1px solid $border-color;
+
+    background: $color-white;
+
+    color: $color-text;
+}
+
+
+.enterprise-inventory__exit-cancel:hover {
+
+    background: $color-surface;
+}
+
+
+.enterprise-inventory__exit-submit {
+
+    border: 1px solid $color-danger;
+
+    background: $color-danger;
+
+    color: $color-white;
+}
+
+
+.enterprise-inventory__exit-submit:hover {
+
+    border-color: darken(
+        $color-danger,
+        8%
+    );
+
+    background: darken(
+        $color-danger,
+        8%
+    );
+}
+
+
+.enterprise-inventory__exit-submit:disabled {
+
+    opacity: 0.6;
+
+    cursor: not-allowed;
+}
+
+
+.enterprise-inventory__exit-form-error {
+
+    grid-column: 1 / -1;
+
+    padding: $space-sm $space-md;
+
+    border: 1px solid
+        rgba(
+            $color-danger,
+            0.20
+        );
+
+    border-radius: $radius-sm;
+
+    background:
+        rgba(
+            $color-danger,
+            0.05
+        );
+
+    color: $color-danger;
+
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+
+.enterprise-inventory__exit-form-error[hidden] {
+
+    display: none;
+}
+
+
+// ========================================
+// ENTRY FORM
+// ========================================
+
+.enterprise-inventory__entry-form {
+
+    background: $color-white;
+
+    border: 1px solid $border-color;
+    border-radius: $radius-md;
+
+    overflow: hidden;
+}
+
+
+.enterprise-inventory__entry-form[hidden] {
+
+    display: none;
+}
+
+
+.enterprise-inventory__entry-form-header {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: $space-lg;
+
+    border-bottom: 1px solid $border-color;
+}
+
+
+.enterprise-inventory__entry-form-header span {
+
+    display: block;
+
+    margin-bottom: $space-xs;
+
+    color: $color-text-muted;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+
+.enterprise-inventory__entry-form-header h3 {
+
+    margin: 0;
+
+    font-size: 18px;
+    line-height: 1.3;
+}
+
+
+.enterprise-inventory__entry-close {
+
+    width: 34px;
+    height: 34px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 0;
+    border-radius: $radius-sm;
+
+    background: transparent;
+
+    color: $color-text-muted;
+
+    cursor: pointer;
+
+    transition:
+        background 160ms ease,
+        color 160ms ease;
+}
+
+
+.enterprise-inventory__entry-close:hover {
+
+    background: $color-surface;
+    color: $color-text;
+}
+
+
+.enterprise-inventory__entry-form-body {
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(160px, 0.7fr)
+        minmax(200px, 1fr)
+        minmax(240px, 1.5fr);
+
+    gap: $space-md;
+
+    padding: $space-lg;
+}
+
+
+.enterprise-inventory__entry-form-body label {
+
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+}
+
+
+.enterprise-inventory__entry-form-body label > span {
+
+    color: $color-text-muted;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+.enterprise-inventory__entry-form-body input,
+.enterprise-inventory__entry-form-body select,
+.enterprise-inventory__entry-form-body textarea {
+
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 10px 12px;
+
+    border: 1px solid $border-color;
+    border-radius: $radius-sm;
+
+    background: $color-white;
+
+    color: $color-text;
+
+    font: inherit;
+    font-size: 14px;
+
+    outline: none;
+
+    transition:
+        border-color 160ms ease,
+        box-shadow 160ms ease;
+}
+
+
+.enterprise-inventory__entry-form-body textarea {
+
+    resize: vertical;
+}
+
+
+.enterprise-inventory__entry-form-body input:focus,
+.enterprise-inventory__entry-form-body select:focus,
+.enterprise-inventory__entry-form-body textarea:focus {
+
+    border-color: $color-purple;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(
+            $color-purple,
+            0.10
+        );
+}
+
+
+.enterprise-inventory__entry-form-actions {
+
+    grid-column: 1 / -1;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: $space-sm;
+
+    padding-top: $space-sm;
+}
+
+
+.enterprise-inventory__entry-cancel,
+.enterprise-inventory__entry-submit {
+
+    min-height: 40px;
+
+    padding: 0 $space-md;
+
+    border-radius: $radius-sm;
+
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+.enterprise-inventory__entry-cancel {
+
+    border: 1px solid $border-color;
+
+    background: $color-white;
+
+    color: $color-text;
+}
+
+
+.enterprise-inventory__entry-cancel:hover {
+
+    background: $color-surface;
+}
+
+
+.enterprise-inventory__entry-submit {
+
+    border: 1px solid $color-purple;
+
+    background: $color-purple;
+
+    color: $color-white;
+}
+
+
+.enterprise-inventory__entry-submit:hover {
+
+    background: $color-purple-light;
+}
+
+
+.enterprise-inventory__entry-submit:disabled {
+
+    opacity: 0.6;
+
+    cursor: not-allowed;
+}
+
+
+.enterprise-inventory__entry-form-error {
+
+    grid-column: 1 / -1;
+
+    padding: $space-sm $space-md;
+
+    border: 1px solid
+        rgba(
+            $color-danger,
+            0.20
+        );
+
+    border-radius: $radius-sm;
+
+    background:
+        rgba(
+            $color-danger,
+            0.05
+        );
+
+    color: $color-danger;
+
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+
+.enterprise-inventory__entry-form-error[hidden] {
+
+    display: none;
+}
+
+
+// ========================================
+// ADJUSTMENT ACTION
+// ========================================
+
+.enterprise-inventory__action--adjustment {
+
+    border-color: $border-color;
+
+    background: $color-surface;
+
+    color: $color-text;
+}
+
+
+.enterprise-inventory__action--adjustment:hover {
+
+    border-color: $color-text-muted;
+
+    background: $color-white;
+
+    color: $color-text;
+}
+
+
+// ========================================
+// ADJUSTMENT FORM
+// ========================================
+
+.enterprise-inventory__adjustment-form {
+
+    background: $color-white;
+
+    border: 1px solid $border-color;
+
+    border-radius: $radius-md;
+
+    overflow: hidden;
+}
+
+
+.enterprise-inventory__adjustment-form[hidden] {
+
+    display: none;
+}
+
+
+.enterprise-inventory__adjustment-form-header {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: $space-lg;
+
+    border-bottom: 1px solid $border-color;
+
+    background: $color-surface-secondary;
+}
+
+
+.enterprise-inventory__adjustment-form-header span {
+
+    display: block;
+
+    margin-bottom: $space-xs;
+
+    color: $color-text-muted;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+
+.enterprise-inventory__adjustment-form-header h3 {
+
+    margin: 0;
+
+    font-size: 18px;
+    line-height: 1.3;
+}
+
+
+.enterprise-inventory__adjustment-close {
+
+    width: 34px;
+    height: 34px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 0;
+    border-radius: $radius-sm;
+
+    background: transparent;
+
+    color: $color-text-muted;
+
+    cursor: pointer;
+
+    transition:
+        background 160ms ease,
+        color 160ms ease;
+}
+
+
+.enterprise-inventory__adjustment-close:hover {
+
+    background: $color-surface;
+
+    color: $color-text;
+}
+
+
+.enterprise-inventory__adjustment-form-body {
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(150px, 0.8fr)
+        minmax(160px, 0.8fr)
+        minmax(200px, 1fr)
+        minmax(240px, 1.5fr);
+
+    gap: $space-md;
+
+    padding: $space-lg;
+}
+
+
+.enterprise-inventory__adjustment-system-stock {
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    min-height: 42px;
+
+    padding: 10px 12px;
+
+    border: 1px solid $border-color;
+    border-radius: $radius-sm;
+
+    background: $color-surface;
+}
+
+
+.enterprise-inventory__adjustment-system-stock span {
+
+    color: $color-text-muted;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+
+.enterprise-inventory__adjustment-system-stock strong {
+
+    margin-top: 3px;
+
+    font-size: 18px;
+    line-height: 1.1;
+}
+
+
+.enterprise-inventory__adjustment-form-body label {
+
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+}
+
+
+.enterprise-inventory__adjustment-form-body label > span {
+
+    color: $color-text-muted;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+.enterprise-inventory__adjustment-form-body input,
+.enterprise-inventory__adjustment-form-body select,
+.enterprise-inventory__adjustment-form-body textarea {
+
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 10px 12px;
+
+    border: 1px solid $border-color;
+    border-radius: $radius-sm;
+
+    background: $color-white;
+
+    color: $color-text;
+
+    font: inherit;
+    font-size: 14px;
+
+    outline: none;
+
+    transition:
+        border-color 160ms ease,
+        box-shadow 160ms ease;
+}
+
+
+.enterprise-inventory__adjustment-form-body textarea {
+
+    resize: vertical;
+}
+
+
+.enterprise-inventory__adjustment-form-body input:focus,
+.enterprise-inventory__adjustment-form-body select:focus,
+.enterprise-inventory__adjustment-form-body textarea:focus {
+
+    border-color: $color-text;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(
+            17,
+            17,
+            17,
+            0.07
+        );
+}
+
+
+// ========================================
+// ADJUSTMENT PREVIEW
+// ========================================
+
+.enterprise-inventory__adjustment-preview {
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    min-height: 42px;
+
+    padding: 10px 12px;
+
+    border: 1px solid $border-color;
+    border-radius: $radius-sm;
+
+    background: $color-surface;
+}
+
+
+.enterprise-inventory__adjustment-preview[hidden] {
+
+    display: none;
+}
+
+
+.enterprise-inventory__adjustment-preview span {
+
+    color: $color-text-muted;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+
+.enterprise-inventory__adjustment-preview strong {
+
+    margin-top: 3px;
+
+    font-size: 18px;
+    line-height: 1.1;
+}
+
+
+// ========================================
+// ADJUSTMENT ERROR
+// ========================================
+
+.enterprise-inventory__adjustment-form-error {
+
+    grid-column: 1 / -1;
+
+    padding: $space-sm $space-md;
+
+    border: 1px solid
+        rgba(
+            $color-danger,
+            0.20
+        );
+
+    border-radius: $radius-sm;
+
+    background:
+        rgba(
+            $color-danger,
+            0.05
+        );
+
+    color: $color-danger;
+
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+
+.enterprise-inventory__adjustment-form-error[hidden] {
+
+    display: none;
+}
+
+
+// ========================================
+// ADJUSTMENT ACTIONS
+// ========================================
+
+.enterprise-inventory__adjustment-form-actions {
+
+    grid-column: 1 / -1;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: $space-sm;
+
+    padding-top: $space-sm;
+}
+
+
+.enterprise-inventory__adjustment-cancel,
+.enterprise-inventory__adjustment-submit {
+
+    min-height: 40px;
+
+    padding: 0 $space-md;
+
+    border-radius: $radius-sm;
+
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+.enterprise-inventory__adjustment-cancel {
+
+    border: 1px solid $border-color;
+
+    background: $color-white;
+
+    color: $color-text;
+}
+
+
+.enterprise-inventory__adjustment-cancel:hover {
+
+    background: $color-surface;
+}
+
+
+.enterprise-inventory__adjustment-submit {
+
+    border: 1px solid $color-text;
+
+    background: $color-text;
+
+    color: $color-white;
+}
+
+
+.enterprise-inventory__adjustment-submit:hover {
+
+    background: $color-black;
+
+    border-color: $color-black;
+}
+
+
+.enterprise-inventory__adjustment-submit:disabled {
+
+    opacity: 0.6;
+
+    cursor: not-allowed;
+}
+
+
+// ========================================
+// MOVEMENTS
+// ========================================
+
+.enterprise-inventory__detail-movements {
+
+    background: $color-white;
+
+    border: 1px solid $border-color;
+    border-radius: $radius-md;
+
+    overflow: hidden;
+}
+
+
+.enterprise-inventory__detail-section-header {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: $space-lg;
+
+    border-bottom: 1px solid $border-color;
+}
+
+
+.enterprise-inventory__detail-section-header span {
+
+    display: block;
+
+    margin-bottom: $space-xs;
+
+    color: $color-text-muted;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+
+.enterprise-inventory__detail-section-header h3 {
+
+    margin: 0;
+
+    font-size: 18px;
+    line-height: 1.3;
+}
+
+
+.enterprise-inventory__detail-section-header > strong {
+
+    min-width: 32px;
+    height: 32px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 999px;
+
+    background: $color-surface;
+
+    color: $color-text;
+
+    font-size: 12px;
+}
+
+
+.enterprise-inventory__movement-list {
+
+    display: flex;
+    flex-direction: column;
+}
+
+
+.enterprise-inventory__movement {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: $space-lg;
+
+    padding: $space-md $space-lg;
+
+    border-bottom: 1px solid $border-color;
+}
+
+
+.enterprise-inventory__movement:last-child {
+
+    border-bottom: 0;
+}
+
+
+.enterprise-inventory__movement-main {
+
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+}
+
+
+.enterprise-inventory__movement-main strong {
+
+    font-size: 14px;
+    line-height: 1.3;
+}
+
+
+.enterprise-inventory__movement-main span {
+
+    color: $color-text-muted;
+
+    font-size: 12px;
+}
+
+
+.enterprise-inventory__movement-quantity {
+
+    flex: 0 0 auto;
+
+    font-size: 17px;
+    font-weight: 700;
+}
+
+
+.enterprise-inventory__movement--entry
+.enterprise-inventory__movement-quantity {
+
+    color: $color-success;
+}
+
+
+.enterprise-inventory__movement--exit
+.enterprise-inventory__movement-quantity {
+
+    color: $color-danger;
+}
+
+
+.enterprise-inventory__movement--adjustment
+.enterprise-inventory__movement-quantity {
+
+    color: $color-warning;
+}
+
+
+.enterprise-inventory__movement-empty {
+
+    padding: $space-xl;
+
+    color: $color-text-muted;
+
+    font-size: 14px;
+
+    text-align: center;
+}
+
+
+// ========================================
+// DETAIL — TABLET
+// ========================================
+
+@media (max-width: 1199px) {
+
+    .enterprise-inventory__adjustment-form-body {
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+    }
+
+
+    .enterprise-inventory__adjustment-form-body label:nth-of-type(3) {
+
+        grid-column: 1 / -1;
+    }
+
+
+    .enterprise-inventory__detail-actions {
+
+        flex-wrap: wrap;
+    }
+
+
+    .enterprise-inventory__exit-form-body {
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+    }
+
+
+    .enterprise-inventory__exit-stock-reference {
+
+        grid-column: 1 / -1;
+    }
+
+
+    .enterprise-inventory__exit-form-body label:nth-of-type(3) {
+
+        grid-column: 1 / -1;
+    }
+
+
+    .enterprise-inventory__detail-info {
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+    }
+
+
+    .enterprise-inventory__detail-info > div:nth-child(2) {
+
+        border-right: 0;
+    }
+
+
+    .enterprise-inventory__detail-info > div:nth-child(-n + 2) {
+
+        border-bottom: 1px solid $border-color;
+    }
+
+
+    .enterprise-inventory__entry-form-body {
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+    }
+
+
+    .enterprise-inventory__entry-form-body label:nth-child(3) {
+
+        grid-column: 1 / -1;
+    }
+
+}
+
+
+// ========================================
+// DETAIL — PHONE
+// ========================================
+
+@media (max-width: 767px) {
+
+    .enterprise-inventory__detail {
+
+        gap: $space-md;
+    }
+
+
+    .enterprise-inventory__detail-header {
+
+        align-items: flex-start;
+        flex-direction: column;
+
+        padding: $space-lg;
+    }
+
+
+    .enterprise-inventory__detail-header h2 {
+
+        font-size: 23px;
+    }
+
+
+    .enterprise-inventory__detail-stock {
+
+        width: 100%;
+        min-width: 0;
+
+        padding: $space-md 0 0;
+
+        border-left: 0;
+        border-top: 1px solid $border-color;
+
+        text-align: left;
+    }
+
+
+    .enterprise-inventory__detail-stock strong {
+
+        font-size: 34px;
+    }
+
+
+    .enterprise-inventory__detail-info {
+
+        grid-template-columns: 1fr;
+    }
+
+
+    .enterprise-inventory__detail-info > div,
+    .enterprise-inventory__detail-info > div:nth-child(2) {
+
+        border-right: 0;
+        border-bottom: 1px solid $border-color;
+    }
+
+
+    .enterprise-inventory__detail-info > div:last-child {
+
+        border-bottom: 0;
+    }
+
+
+    .enterprise-inventory__detail-actions {
+
+        justify-content: stretch;
+    }
+
+
+    .enterprise-inventory__action {
+
+        width: 100%;
+    }
+
+
+    .enterprise-inventory__entry-form-body {
+
+        grid-template-columns: 1fr;
+
+        padding: $space-md;
+    }
+
+
+    .enterprise-inventory__entry-form-body label:nth-child(3) {
+
+        grid-column: auto;
+    }
+
+
+    .enterprise-inventory__entry-form-actions {
+
+        flex-direction: column-reverse;
+    }
+
+
+    .enterprise-inventory__entry-cancel,
+    .enterprise-inventory__entry-submit {
+
+        width: 100%;
+    }
+
+
+    .enterprise-inventory__movement {
+
+        gap: $space-md;
+
+        padding:
+            $space-md;
+    }
+
+
+    .enterprise-inventory__adjustment-form-body {
+
+        grid-template-columns: 1fr;
+
+        padding: $space-md;
+    }
+
+
+    .enterprise-inventory__adjustment-form-body label:nth-of-type(3) {
+
+        grid-column: auto;
+    }
+
+
+    .enterprise-inventory__adjustment-form-actions {
+
+        flex-direction: column-reverse;
+    }
+
+
+    .enterprise-inventory__adjustment-cancel,
+    .enterprise-inventory__adjustment-submit {
+
+        width: 100%;
+    }
+
+
+    .enterprise-inventory__detail-section-header {
+
+        padding: $space-md;
+    }
+
+
+    .enterprise-inventory__detail-actions {
+
+        flex-direction: column;
+    }
+
+
+    .enterprise-inventory__action {
+
+        width: 100%;
+    }
+
+
+    .enterprise-inventory__exit-form-body {
+
+        grid-template-columns: 1fr;
+
+        padding: $space-md;
+    }
+
+
+    .enterprise-inventory__exit-stock-reference,
+    .enterprise-inventory__exit-form-body label:nth-of-type(3) {
+
+        grid-column: auto;
+    }
+
+
+    .enterprise-inventory__exit-form-actions {
+
+        flex-direction: column-reverse;
+    }
+
+
+    .enterprise-inventory__exit-cancel,
+    .enterprise-inventory__exit-submit {
+
+        width: 100%;
+    }
+
+}
+
+// ========================================
+// TABLET
+// ========================================
+
+@media (max-width: 1199px) {
+
+    .enterprise-inventory__list {
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+
+        gap: $space-md;
+    }
+
+
+    .enterprise-inventory__card {
+
+        padding: $space-md;
+    }
+
+}
+
+
+// ========================================
+// PHONE
+// ========================================
+
+@media (max-width: 767px) {
+
+    .enterprise-inventory__header {
+
+        margin-bottom: $space-lg;
+    }
+
+
+    .enterprise-inventory__header h1 {
+
+        font-size: 27px;
+    }
+
+
+    .enterprise-inventory__header p {
+
+        font-size: 14px;
+    }
+
+
+    .enterprise-inventory__list {
+
+        grid-template-columns: 1fr;
+
+        gap: $space-md;
+    }
+
+
+    .enterprise-inventory__card {
+
+        padding: $space-md;
+
+        border-radius: $radius-sm;
+    }
+
+
+    .enterprise-inventory__card-main {
+
+        gap: $space-md;
+    }
+
+
+    .enterprise-inventory__card-main h2 {
+
+        font-size: 17px;
+    }
+
+
+    .enterprise-inventory__stock {
+
+        min-width: 60px;
+    }
+
+
+    .enterprise-inventory__stock strong {
+
+        font-size: 24px;
+    }
+
+
+    .enterprise-inventory__card-meta {
+
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+}
