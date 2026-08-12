@@ -95,6 +95,8 @@ export function EnterpriseDashboard(profile) {
 
 export function initEnterpriseDashboard() {
 
+    initEnterpriseLayout();
+
     const params =
         new URLSearchParams(
             window.location.search

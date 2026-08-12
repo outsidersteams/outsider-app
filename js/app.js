@@ -67,10 +67,6 @@ observeAuth(async (user) => {
 
 });
 
-
-
-
-
 const app = document.querySelector("#app");
 
 app.innerHTML = `

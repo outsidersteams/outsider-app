@@ -521,7 +521,7 @@ export function initEnterpriseProduction(
                 // FIRESTORE WRITE
                 // ========================================
 
-                await updateProductionStatus(
+               await updateProductionStatus(
     productionOrder.orderId,
     newStatus
 );
@@ -563,6 +563,14 @@ export function initEnterpriseProduction(
 
 
                 // ========================================
+                // UPDATE SELECT VISUAL STATE
+                // ========================================
+
+                statusSelect.className =
+                    `enterprise-production__status-select enterprise-production__status-select--${newStatus}`;
+
+
+                // ========================================
                 // UPDATE COUNTERS
                 // ========================================
 
@@ -593,6 +601,9 @@ export function initEnterpriseProduction(
 
                 statusSelect.value =
                     previousStatus;
+
+                statusSelect.className =
+                    `enterprise-production__status-select enterprise-production__status-select--${previousStatus}`;
 
             } finally {
 
@@ -1155,6 +1166,7 @@ async function showProductionDetail(
 
                 <select
                     id="enterprise-production-status"
+                    class="enterprise-production__status-select enterprise-production__status-select--${productionOrder.status}"
                     data-production-status
                 >
 
