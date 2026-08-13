@@ -6,7 +6,9 @@ import {
     getOrders,
     updateOrderStatus,
     updatePaymentStatus,
-    updateProductionStatus
+    updateProductionStatus,
+    createSaleFromOrder,
+    refundSaleFromOrder
 } from "../firebase/firestore.js";
 
 
@@ -995,9 +997,7 @@ function renderOrderCard(
 
 
     const total =
-        Number(
-            order.total || 0
-        ).toFixed(2);
+        getOrderTotal(order).toFixed(2);
 
 
     return `
@@ -1257,9 +1257,7 @@ async function loadOrderDetail(
 
 
     const total =
-        Number(
-            order.total || 0
-        ).toFixed(2);
+        getOrderTotal(order).toFixed(2);
 
 
     const subtotal =
@@ -1298,6 +1296,29 @@ async function loadOrderDetail(
                 order.productionStatus
             )
             : "No requiere";
+
+
+    // ========================================
+    // SALE AVAILABILITY
+    // ========================================
+
+    const canMarkAsSale =
+        order.orderStatus === "completed" &&
+        order.paymentStatus === "paid" &&
+        (
+            order.requiresProduction !== true ||
+            order.productionStatus === "ready" ||
+            order.productionStatus === "not_required"
+        ) &&
+        order.saleConfirmed !== true &&
+        !order.saleId;
+
+    const canProcessRefund =
+        order.saleConfirmed === true &&
+        !!order.saleId &&
+        order.orderStatus === "cancelled" &&
+        order.paymentStatus === "refunded" &&
+        order.refundConfirmed !== true;
 
 
     const createdAt =
@@ -1384,8 +1405,12 @@ async function loadOrderDetail(
                     </div>
 
 
-                    <select
-                        id="enterprise-orders-detail-order-status"
+                    <div
+                        class="enterprise-orders__detail-actions"
+                    >
+
+                        <select
+                            id="enterprise-orders-detail-order-status"
                         class="
                             enterprise-orders__detail-select
                             enterprise-orders__detail-select--order
@@ -1437,6 +1462,40 @@ async function loadOrderDetail(
                             Cancelado
                         </option>
                     </select>
+
+                        ${
+                            canMarkAsSale
+                                ? `
+                                    <button
+                                        type="button"
+                                        id="enterprise-orders-detail-mark-sale"
+                                        class="enterprise-orders__mark-sale"
+                                        data-order-id="${order.id}"
+                                    >
+                                        <i class="fa-solid fa-check"></i>
+                                        Marcar como venta
+                                    </button>
+                                `
+                                : ""
+                        }
+
+                        ${
+                            canProcessRefund
+                                ? `
+                                    <button
+                                        type="button"
+                                        id="enterprise-orders-detail-process-refund"
+                                        class="enterprise-orders__mark-sale"
+                                        data-order-id="${order.id}"
+                                    >
+                                        <i class="fa-solid fa-rotate-left"></i>
+                                        Procesar reembolso
+                                    </button>
+                                `
+                                : ""
+                        }
+
+                    </div>
 
                 </div>
 
@@ -2500,29 +2559,463 @@ function initOrderDetailActions() {
             "#enterprise-orders-detail-back"
         );
 
+    const markSaleButton =
+        document.querySelector(
+            "#enterprise-orders-detail-mark-sale"
+        );
 
-    if (!backButton) {
+    const processRefundButton =
+        document.querySelector(
+            "#enterprise-orders-detail-process-refund"
+        );
+
+
+    if (backButton) {
+
+        backButton.addEventListener(
+            "click",
+            () => {
+
+                window.history.pushState(
+                    {},
+                    "",
+                    "/enterprise/orders"
+                );
+
+
+                renderOrders();
+
+            }
+        );
+
+    }
+
+
+    if (markSaleButton) {
+
+        markSaleButton.addEventListener(
+            "click",
+            () => {
+
+                const orderId =
+                    markSaleButton.dataset.orderId ||
+                    document.querySelector(
+                        "#enterprise-orders-detail-order-status"
+                    )?.dataset.orderId;
+
+                const order =
+                    getCurrentDetailOrder(
+                        orderId
+                    );
+
+                if (!order) {
+
+                    console.error(
+                        "No se encontró la orden para confirmar la venta.",
+                        orderId
+                    );
+
+                    return;
+
+                }
+
+                openSaleConfirmationModal(
+                    order
+                );
+
+            }
+        );
+
+    }
+
+    if (processRefundButton) {
+
+        processRefundButton.addEventListener(
+            "click",
+            () => {
+
+                const orderId =
+                    processRefundButton.dataset.orderId;
+
+                const order =
+                    getCurrentDetailOrder(
+                        orderId
+                    );
+
+                if (!order) {
+
+                    console.error(
+                        "No se encontró la orden para procesar el reembolso.",
+                        orderId
+                    );
+
+                    return;
+
+                }
+
+                openRefundAuthorizationModal(
+                    order
+                );
+
+            }
+        );
+
+    }
+
+
+}
+
+
+// ========================================
+// SALE CONFIRMATION MODAL
+// ========================================
+
+function openSaleConfirmationModal(
+    order
+) {
+
+    closeSaleConfirmationModal();
+
+
+    const orderNumber =
+        order.orderNumber ||
+        "—";
+
+    const total =
+        getOrderTotal(order).toFixed(2);
+
+
+    const modal =
+        document.createElement(
+            "div"
+        );
+
+
+    modal.id =
+        "enterprise-orders-sale-confirmation-modal";
+
+
+    modal.className =
+        "enterprise-orders__sale-modal";
+
+
+    modal.innerHTML = `
+
+        <div
+            class="enterprise-orders__sale-modal-backdrop"
+            data-sale-modal-close="true"
+        ></div>
+
+
+        <section
+            class="enterprise-orders__sale-modal-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="enterprise-orders-sale-modal-title"
+        >
+
+            <div
+                class="enterprise-orders__sale-modal-icon"
+                aria-hidden="true"
+            >
+                <i class="fa-solid fa-check"></i>
+            </div>
+
+
+            <div
+                class="enterprise-orders__sale-modal-content"
+            >
+
+                <h2
+                    id="enterprise-orders-sale-modal-title"
+                >
+                    ¿Registrar esta venta?
+                </h2>
+
+
+                <p>
+                    Estás a punto de registrar el pedido
+                    <strong>#${orderNumber}</strong>
+                    como una venta realizada.
+                </p>
+
+
+                <p>
+                    Se creará el registro financiero correspondiente
+                    por un total de
+                    <strong>Q${total}</strong>.
+                </p>
+
+
+                <p
+                    class="enterprise-orders__sale-modal-warning"
+                >
+                    Confirma únicamente si el pedido fue efectivamente
+                    cobrado y completado.
+                </p>
+
+            </div>
+
+
+            <div
+                class="enterprise-orders__sale-modal-actions"
+            >
+
+                <button
+                    type="button"
+                    class="enterprise-orders__sale-modal-cancel"
+                    id="enterprise-orders-sale-modal-cancel"
+                >
+                    Cancelar
+                </button>
+
+
+                <button
+                    type="button"
+                    class="enterprise-orders__sale-modal-confirm"
+                    id="enterprise-orders-sale-modal-confirm"
+                >
+                    Confirmar venta
+                </button>
+
+            </div>
+
+        </section>
+
+    `;
+
+
+    document.body.appendChild(
+        modal
+    );
+
+
+    requestAnimationFrame(
+        () => {
+
+            modal.classList.add(
+                "is-open"
+            );
+
+        }
+    );
+
+
+    const cancelButton =
+        modal.querySelector(
+            "#enterprise-orders-sale-modal-cancel"
+        );
+
+    const confirmButton =
+        modal.querySelector(
+            "#enterprise-orders-sale-modal-confirm"
+        );
+
+
+    const close =
+        () => {
+
+            closeSaleConfirmationModal();
+
+        };
+
+
+    cancelButton?.addEventListener(
+        "click",
+        close
+    );
+
+
+    modal.addEventListener(
+        "click",
+        event => {
+
+            if (
+                event.target.dataset.saleModalClose ===
+                "true"
+            ) {
+
+                close();
+
+            }
+
+        }
+    );
+
+
+    confirmButton?.addEventListener(
+        "click",
+        async () => {
+
+            if (
+                confirmButton.disabled
+            ) {
+
+                return;
+
+            }
+
+            confirmButton.disabled = true;
+
+            const originalText =
+                confirmButton.textContent;
+
+            confirmButton.textContent =
+                "Registrando...";
+
+            try {
+
+                const result =
+                    await createSaleFromOrder(
+                        order.id
+                    );
+
+                console.log(
+                    "✓ Venta registrada desde Enterprise:",
+                    {
+                        orderId: order.id,
+                        orderNumber: order.orderNumber,
+                        saleId: result?.saleId
+                    }
+                );
+
+                close();
+
+                await renderOrders();
+
+            } catch (error) {
+
+                console.error(
+                    "Error al registrar la venta:",
+                    error
+                );
+
+                confirmButton.disabled = false;
+
+                confirmButton.textContent =
+                    originalText;
+
+                window.alert(
+                    error?.message ||
+                    "No fue posible registrar la venta."
+                );
+
+            }
+
+        }
+    );
+
+
+    const handleEscape =
+        event => {
+
+            if (
+                event.key === "Escape"
+            ) {
+
+                close();
+
+            }
+
+        };
+
+
+    document.addEventListener(
+        "keydown",
+        handleEscape
+    );
+
+
+    modal._saleModalCleanup =
+        () => {
+
+            document.removeEventListener(
+                "keydown",
+                handleEscape
+            );
+
+        };
+
+
+    cancelButton?.focus();
+
+}
+
+
+function closeSaleConfirmationModal() {
+
+    const modal =
+        document.querySelector(
+            "#enterprise-orders-sale-confirmation-modal"
+        );
+
+
+    if (!modal) {
 
         return;
 
     }
 
 
-    backButton.addEventListener(
-        "click",
+    if (
+        typeof modal._saleModalCleanup ===
+        "function"
+    ) {
+
+        modal._saleModalCleanup();
+
+    }
+
+
+    modal.classList.remove(
+        "is-open"
+    );
+
+
+    window.setTimeout(
         () => {
 
-            window.history.pushState(
-                {},
-                "",
-                "/enterprise/orders"
-            );
+            modal.remove();
 
-
-            renderOrders();
-
-        }
+        },
+        160
     );
+
+}
+
+
+// ========================================
+// ORDER TOTAL
+// ========================================
+
+function getOrderTotal(
+    order
+) {
+
+    const storedTotal =
+        Number(order?.total);
+
+    // Si Firestore ya tiene un total válido, lo respetamos.
+    if (
+        Number.isFinite(storedTotal) &&
+        storedTotal > 0
+    ) {
+        return storedTotal;
+    }
+
+    // Fallback: reconstruimos el total a partir del resumen
+    // que ya existe en la orden. Esto evita mostrar Q0.00
+    // cuando subtotal/envío/descuento sí están disponibles.
+    const subtotal =
+        Number(order?.subtotal) || 0;
+
+    const shipping =
+        Number(order?.shipping) || 0;
+
+    const discount =
+        Number(order?.discount) || 0;
+
+    return subtotal + shipping - discount;
 
 }
 
@@ -2979,5 +3472,326 @@ function escapeHTML(
             /'/g,
             "&#039;"
         );
+
+}
+
+// ========================================
+// REFUND AUTHORIZATION MODAL
+// ========================================
+
+function closeRefundAuthorizationModal() {
+
+    const modal =
+        document.querySelector(
+            "#enterprise-orders-refund-authorization-modal"
+        );
+
+    if (!modal) {
+        return;
+    }
+
+    modal.remove();
+
+}
+
+function openRefundAuthorizationModal(
+    order
+) {
+
+    closeRefundAuthorizationModal();
+
+    const orderNumber =
+        order.orderNumber ||
+        "—";
+
+    const total =
+        getOrderTotal(order).toFixed(2);
+
+    const modal =
+        document.createElement(
+            "div"
+        );
+
+    modal.id =
+        "enterprise-orders-refund-authorization-modal";
+
+    modal.className =
+        "enterprise-orders__sale-modal";
+
+    modal.innerHTML = `
+
+        <div
+            class="enterprise-orders__sale-modal-backdrop"
+            data-refund-modal-close="true"
+        ></div>
+
+        <section
+            class="enterprise-orders__sale-modal-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="enterprise-orders-refund-modal-title"
+        >
+
+            <div
+                class="enterprise-orders__sale-modal-icon"
+                aria-hidden="true"
+            >
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+
+            <div
+                class="enterprise-orders__sale-modal-content"
+            >
+
+                <h2
+                    id="enterprise-orders-refund-modal-title"
+                >
+                    Autorizar reembolso
+                </h2>
+
+                <p>
+                    El pedido
+                    <strong>#${escapeHTML(orderNumber)}</strong>
+                    está cancelado y el pago está marcado como reembolsado.
+                </p>
+
+                <p>
+                    Se actualizará el registro histórico de la venta
+                    por <strong>Q${total}</strong>.
+                </p>
+
+                <p
+                    class="enterprise-orders__sale-modal-warning"
+                >
+                    Esta operación requiere credenciales de un usuario
+                    con rol ADMIN. La venta no será eliminada.
+                </p>
+
+                <div
+                    style="display:grid;gap:10px;margin-top:16px;"
+                >
+
+                    <label
+                        for="enterprise-orders-refund-admin-email"
+                    >
+                        Correo del administrador
+                    </label>
+
+                    <input
+                        id="enterprise-orders-refund-admin-email"
+                        type="email"
+                        autocomplete="username"
+                        placeholder="Correo del administrador"
+                    />
+
+                    <label
+                        for="enterprise-orders-refund-admin-password"
+                    >
+                        Contraseña de administrador
+                    </label>
+
+                    <input
+                        id="enterprise-orders-refund-admin-password"
+                        type="password"
+                        autocomplete="current-password"
+                        placeholder="Contraseña"
+                    />
+
+                    <label
+                        for="enterprise-orders-refund-reason"
+                    >
+                        Motivo
+                    </label>
+
+                    <textarea
+                        id="enterprise-orders-refund-reason"
+                        rows="3"
+                        maxlength="300"
+                    >Pedido cancelado y pago reembolsado</textarea>
+
+                </div>
+
+            </div>
+
+            <div
+                class="enterprise-orders__sale-modal-actions"
+            >
+
+                <button
+                    type="button"
+                    class="enterprise-orders__sale-modal-cancel"
+                    id="enterprise-orders-refund-modal-cancel"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    type="button"
+                    class="enterprise-orders__sale-modal-confirm"
+                    id="enterprise-orders-refund-modal-confirm"
+                >
+                    Autorizar reembolso
+                </button>
+
+            </div>
+
+        </section>
+
+    `;
+
+    document.body.appendChild(
+        modal
+    );
+
+    requestAnimationFrame(
+        () => {
+            modal.classList.add(
+                "is-open"
+            );
+        }
+    );
+
+    const emailInput =
+        modal.querySelector(
+            "#enterprise-orders-refund-admin-email"
+        );
+
+    const passwordInput =
+        modal.querySelector(
+            "#enterprise-orders-refund-admin-password"
+        );
+
+    const reasonInput =
+        modal.querySelector(
+            "#enterprise-orders-refund-reason"
+        );
+
+    const cancelButton =
+        modal.querySelector(
+            "#enterprise-orders-refund-modal-cancel"
+        );
+
+    const confirmButton =
+        modal.querySelector(
+            "#enterprise-orders-refund-modal-confirm"
+        );
+
+    const close =
+        () => {
+            closeRefundAuthorizationModal();
+        };
+
+    cancelButton?.addEventListener(
+        "click",
+        close
+    );
+
+    modal.addEventListener(
+        "click",
+        event => {
+
+            if (
+                event.target.dataset.refundModalClose ===
+                "true"
+            ) {
+                close();
+            }
+
+        }
+    );
+
+    confirmButton?.addEventListener(
+        "click",
+        async () => {
+
+            if (confirmButton.disabled) {
+                return;
+            }
+
+            const adminEmail =
+                emailInput?.value.trim();
+
+            const adminPassword =
+                passwordInput?.value || "";
+
+            const reason =
+                reasonInput?.value.trim() ||
+                "Pedido cancelado y pago reembolsado";
+
+            if (!adminEmail || !adminPassword) {
+
+                window.alert(
+                    "Ingresa el correo y la contraseña del administrador."
+                );
+
+                return;
+            }
+
+            confirmButton.disabled = true;
+            confirmButton.textContent =
+                "Autorizando...";
+
+            try {
+
+                const result =
+                    await refundSaleFromOrder(
+                        order.id,
+                        adminEmail,
+                        adminPassword,
+                        reason
+                    );
+
+                console.log(
+                    "✓ Reembolso registrado:",
+                    result
+                );
+
+                close();
+
+                await renderOrders();
+
+            } catch (error) {
+
+                console.error(
+                    "Error al procesar el reembolso:",
+                    error
+                );
+
+                confirmButton.disabled = false;
+                confirmButton.textContent =
+                    "Autorizar reembolso";
+
+                window.alert(
+                    error?.message ||
+                    "No fue posible autorizar el reembolso."
+                );
+
+            }
+
+        }
+    );
+
+    const handleEscape =
+        event => {
+
+            if (
+                event.key === "Escape"
+            ) {
+
+                close();
+
+                document.removeEventListener(
+                    "keydown",
+                    handleEscape
+                );
+
+            }
+
+        };
+
+    document.addEventListener(
+        "keydown",
+        handleEscape
+    );
 
 }

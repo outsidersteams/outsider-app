@@ -13,11 +13,40 @@ import {
     runTransaction
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
-import { app } from "./config.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+import { app, firebaseConfig } from "./config.js";
+import {
+    getAuth,
+    signInWithEmailAndPassword,
+    signOut
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+
+import {
+    getApps,
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 
 const db = getFirestore(app);
 const auth = getAuth(app);
+
+const ADMIN_REFUND_APP_NAME =
+    "outsider-admin-refund";
+
+function getAdminRefundApp() {
+
+    const existingApp =
+        getApps().find(
+            item =>
+                item.name ===
+                ADMIN_REFUND_APP_NAME
+        );
+
+    return existingApp ||
+        initializeApp(
+            firebaseConfig,
+            ADMIN_REFUND_APP_NAME
+        );
+
+}
 
 export async function getCategories() {
 
@@ -384,6 +413,431 @@ export async function getCustomers() {
     }));
 
 }
+
+
+// ========================================
+// SALES — DATA LAYER
+// ========================================
+
+/**
+ * Obtiene una venta asociada a una orden.
+ *
+ * La colección sales contiene información financiera
+ * y su lectura queda protegida por Firestore Rules.
+ */
+export async function getSaleByOrderId(
+    orderId
+) {
+
+    if (!orderId) {
+        throw new Error(
+            "El orderId es obligatorio."
+        );
+    }
+
+    const saleRef =
+        doc(
+            db,
+            "sales",
+            orderId
+        );
+
+    const snapshot =
+        await getDoc(
+            saleRef
+        );
+
+    if (!snapshot.exists()) {
+        return null;
+    }
+
+    return {
+        id:
+            snapshot.id,
+        ...snapshot.data()
+    };
+
+}
+
+
+/**
+ * Crea el registro financiero de una orden.
+ *
+ * Importante:
+ * - No lee sales/{orderId}.
+ * - Solo lee la orden.
+ * - La protección contra duplicados se apoya en:
+ *      1. orders.saleConfirmed / orders.saleId
+ *      2. sales/{orderId} como ID determinístico
+ *      3. Firestore Rules: sales solo permite CREATE
+ *         para Enterprise y UPDATE solo para Admin.
+ *
+ * Condiciones:
+ * - orderStatus      === "completed"
+ * - paymentStatus    === "paid"
+ * - productionStatus === "ready"
+ *
+ * Si no requiere producción:
+ * - productionStatus === "not_required"
+ *   también es válido.
+ */
+export async function createSaleFromOrder(
+    orderId
+) {
+
+    if (!orderId) {
+        throw new Error(
+            "El orderId es obligatorio."
+        );
+    }
+
+    const currentUser =
+        auth.currentUser;
+
+    if (!currentUser) {
+        throw new Error(
+            "No hay una cuenta autenticada para registrar la venta."
+        );
+    }
+
+    const saleRef =
+        doc(
+            db,
+            "sales",
+            orderId
+        );
+
+    const orderRef =
+        doc(
+            db,
+            "orders",
+            orderId
+        );
+
+    let result = null;
+
+    const currentUserProfile =
+        await getUserProfile(
+            currentUser.uid
+        );
+
+    await runTransaction(
+        db,
+        async transaction => {
+
+            // =================================
+            // OBTENER ORDEN
+            // =================================
+
+            const orderSnapshot =
+                await transaction.get(
+                    orderRef
+                );
+
+            if (!orderSnapshot.exists()) {
+
+                throw new Error(
+                    "El pedido no existe."
+                );
+
+            }
+
+            const order =
+                orderSnapshot.data();
+
+
+            // =================================
+            // PROTECCIÓN CONTRA DUPLICADO
+            // =================================
+
+            if (
+                order.saleConfirmed === true ||
+                order.saleId
+            ) {
+
+                throw new Error(
+                    "Esta orden ya está registrada como venta."
+                );
+
+            }
+
+
+            // =================================
+            // ESTADOS
+            // =================================
+
+            const orderStatus =
+                order.orderStatus ||
+                "pending";
+
+            const paymentStatus =
+                order.paymentStatus ||
+                "pending";
+
+            const productionStatus =
+                order.productionStatus ||
+                (
+                    order.requiresProduction
+                        ? "pending"
+                        : "not_required"
+                );
+
+
+            // =================================
+            // VALIDAR ORDER
+            // =================================
+
+            if (
+                orderStatus !==
+                "completed"
+            ) {
+
+                throw new Error(
+                    "No se puede registrar la venta: el pedido no está completado."
+                );
+
+            }
+
+
+            // =================================
+            // VALIDAR PAYMENT
+            // =================================
+
+            if (
+                paymentStatus !==
+                "paid"
+            ) {
+
+                throw new Error(
+                    "No se puede registrar la venta: el pago no está marcado como pagado."
+                );
+
+            }
+
+
+            // =================================
+            // VALIDAR PRODUCTION
+            // =================================
+
+            if (
+                order.requiresProduction
+                    ? productionStatus !== "ready"
+                    : (
+                        productionStatus !== "not_required" &&
+                        productionStatus !== "ready"
+                    )
+            ) {
+
+                throw new Error(
+                    "No se puede registrar la venta: la producción todavía no está lista."
+                );
+
+            }
+
+
+            // =================================
+            // IMPORTES
+            // =================================
+
+            const subtotal =
+                Number(
+                    order.subtotal || 0
+                );
+
+            const discountAmount =
+                Number(
+                    order.discount || 0
+                );
+
+            const shippingAmount =
+                Number(
+                    order.shipping || 0
+                );
+
+            const orderTotal =
+                Number(order.total);
+
+            const calculatedTotal =
+                subtotal +
+                shippingAmount -
+                discountAmount;
+
+            const netAmount =
+                Number.isFinite(orderTotal)
+                    ? orderTotal
+                    : calculatedTotal;
+
+
+            // =================================
+            // SALE DATA
+            // =================================
+
+            const saleData = {
+
+                saleId:
+                    orderId,
+
+                orderId,
+
+                orderNumber:
+                    order.orderNumber ||
+                    null,
+
+                customerId:
+                    order.customerId ||
+                    null,
+
+                salesChannel:
+                    order.salesChannel ||
+                    "manual",
+
+                paymentMethod:
+                    order.paymentMethod ||
+                    "other",
+
+                grossAmount:
+                    subtotal,
+
+                subtotal,
+
+                discountAmount,
+
+                shippingAmount,
+
+                netAmount,
+
+                paymentAmount:
+                    netAmount,
+
+                status:
+                    "completed",
+
+                paymentStatus:
+                    "paid",
+
+                confirmedByUid:
+                    currentUser.uid,
+
+                confirmedByName:
+                    currentUserProfile?.name ||
+                    currentUserProfile?.displayName ||
+                    currentUserProfile?.fullName ||
+                    (
+                        currentUserProfile?.firstName &&
+                        currentUserProfile?.lastName
+                            ? `${currentUserProfile.firstName} ${currentUserProfile.lastName}`
+                            : null
+                    ) ||
+                    currentUser.displayName ||
+                    currentUser.email ||
+                    "Usuario",
+
+                source:
+                    "enterprise",
+
+                version:
+                    1,
+
+                saleDate:
+                    serverTimestamp(),
+
+                completedAt:
+                    serverTimestamp(),
+
+                createdAt:
+                    serverTimestamp(),
+
+                updatedAt:
+                    serverTimestamp()
+
+            };
+
+
+            // =================================
+            // CREAR SALE
+            // =================================
+
+            transaction.set(
+                saleRef,
+                saleData
+            );
+
+
+            // =================================
+            // MARCAR ORDER COMO REGISTRADA
+            // =================================
+
+            transaction.update(
+                orderRef,
+                {
+
+                    saleConfirmed:
+                        true,
+
+                    saleId:
+                        orderId,
+
+                    saleConfirmedByUid:
+                        currentUser.uid,
+
+                    saleConfirmedByName:
+                        currentUserProfile?.name ||
+                        currentUserProfile?.displayName ||
+                        currentUserProfile?.fullName ||
+                        (
+                            currentUserProfile?.firstName &&
+                            currentUserProfile?.lastName
+                                ? `${currentUserProfile.firstName} ${currentUserProfile.lastName}`
+                                : null
+                        ) ||
+                        currentUser.displayName ||
+                        currentUser.email ||
+                        "Usuario",
+
+                    saleConfirmedAt:
+                        serverTimestamp(),
+
+                    updatedAt:
+                        serverTimestamp()
+
+                }
+            );
+
+
+            result = {
+
+                created:
+                    true,
+
+                alreadyExists:
+                    false,
+
+                saleId:
+                    orderId,
+
+                ...saleData
+
+            };
+
+        }
+    );
+
+
+    console.log(
+        "✓ Venta registrada:",
+        {
+            orderId,
+            saleId:
+                result?.saleId
+        }
+    );
+
+
+    return result;
+
+}
+
+
 
 export async function getOrders() {
 
@@ -1744,5 +2198,267 @@ export async function updateProduct(
                 serverTimestamp()
         }
     );
+
+}
+
+/**
+ * Registra un reembolso completo sobre una venta histórica.
+ *
+ * La cuenta ADMIN se autentica en una app Firebase secundaria para que
+ * la sesión del empleado actual no sea reemplazada.
+ *
+ * No elimina la venta ni modifica sus importes originales.
+ */
+export async function refundSaleFromOrder(
+    orderId,
+    adminEmail,
+    adminPassword,
+    refundReason = "Pedido cancelado y pago reembolsado"
+) {
+
+    if (!orderId) {
+        throw new Error(
+            "El orderId es obligatorio."
+        );
+    }
+
+    if (!adminEmail || !adminPassword) {
+        throw new Error(
+            "Se requieren las credenciales del administrador."
+        );
+    }
+
+    if (!auth.currentUser) {
+        throw new Error(
+            "No hay una sesión Enterprise activa."
+        );
+    }
+
+    const adminApp =
+        getAdminRefundApp();
+
+    const adminAuth =
+        getAuth(adminApp);
+
+    const adminDb =
+        getFirestore(adminApp);
+
+    try {
+
+        const adminCredential =
+            await signInWithEmailAndPassword(
+                adminAuth,
+                adminEmail.trim(),
+                adminPassword
+            );
+
+        const adminUid =
+            adminCredential.user.uid;
+
+        const adminUserRef =
+            doc(
+                adminDb,
+                "users",
+                adminUid
+            );
+
+        const adminUserSnapshot =
+            await getDoc(
+                adminUserRef
+            );
+
+        if (!adminUserSnapshot.exists()) {
+            throw new Error(
+                "La cuenta indicada no tiene perfil Enterprise."
+            );
+        }
+
+        const adminProfile =
+            adminUserSnapshot.data();
+
+        if (
+            adminProfile.active !== true ||
+            adminProfile.role !== "admin"
+        ) {
+            throw new Error(
+                "La cuenta indicada no tiene autorización de ADMIN."
+            );
+        }
+
+        const orderRef =
+            doc(
+                adminDb,
+                "orders",
+                orderId
+            );
+
+        const saleRef =
+            doc(
+                adminDb,
+                "sales",
+                orderId
+            );
+
+        const result =
+            await runTransaction(
+                adminDb,
+                async transaction => {
+
+                    const orderSnapshot =
+                        await transaction.get(
+                            orderRef
+                        );
+
+                    const saleSnapshot =
+                        await transaction.get(
+                            saleRef
+                        );
+
+                    if (!orderSnapshot.exists()) {
+                        throw new Error(
+                            "El pedido no existe."
+                        );
+                    }
+
+                    if (!saleSnapshot.exists()) {
+                        throw new Error(
+                            "No existe una venta registrada para este pedido."
+                        );
+                    }
+
+                    const order =
+                        orderSnapshot.data();
+
+                    const sale =
+                        saleSnapshot.data();
+
+                    if (
+                        sale.status ===
+                        "refunded"
+                    ) {
+                        throw new Error(
+                            "Esta venta ya fue reembolsada."
+                        );
+                    }
+
+                    if (
+                        order.orderStatus !==
+                        "cancelled"
+                    ) {
+                        throw new Error(
+                            "El pedido debe estar cancelado antes de procesar el reembolso."
+                        );
+                    }
+
+                    if (
+                        order.paymentStatus !==
+                        "refunded"
+                    ) {
+                        throw new Error(
+                            "El pago debe estar marcado como reembolsado antes de procesar la venta."
+                        );
+                    }
+
+                    const adminName =
+                        adminProfile.name ||
+                        adminProfile.displayName ||
+                        adminProfile.fullName ||
+                        (
+                            adminProfile.firstName &&
+                            adminProfile.lastName
+                                ? `${adminProfile.firstName} ${adminProfile.lastName}`
+                                : null
+                        ) ||
+                        adminCredential.user.displayName ||
+                        adminCredential.user.email ||
+                        "Administrador";
+
+                    const refundedAmount =
+                        Number(
+                            sale.netAmount ??
+                            sale.paymentAmount ??
+                            0
+                        );
+
+                    transaction.update(
+                        saleRef,
+                        {
+
+                            status:
+                                "refunded",
+
+                            paymentStatus:
+                                "refunded",
+
+                            refundedAmount,
+
+                            refundReason:
+                                refundReason.trim() ||
+                                "Pedido cancelado y pago reembolsado",
+
+                            refundedByUid:
+                                adminUid,
+
+                            refundedByName:
+                                adminName,
+
+                            refundedAt:
+                                serverTimestamp(),
+
+                            updatedAt:
+                                serverTimestamp()
+
+                        }
+                    );
+
+                    transaction.update(
+                        orderRef,
+                        {
+
+                            refundConfirmed:
+                                true,
+
+                            refundConfirmedByUid:
+                                adminUid,
+
+                            refundConfirmedByName:
+                                adminName,
+
+                            refundConfirmedAt:
+                                serverTimestamp(),
+
+                            updatedAt:
+                                serverTimestamp()
+
+                        }
+                    );
+
+                    return {
+                        saleId:
+                            orderId,
+                        refundedAmount,
+                        refundedByUid:
+                            adminUid,
+                        refundedByName:
+                            adminName
+                    };
+
+                }
+            );
+
+        console.log(
+            "✓ Reembolso autorizado por ADMIN:",
+            result
+        );
+
+        return result;
+
+    } finally {
+
+        await signOut(
+            adminAuth
+        );
+
+    }
 
 }
