@@ -8,7 +8,11 @@ import {
     updatePaymentStatus,
     updateProductionStatus,
     createSaleFromOrder,
-    refundSaleFromOrder
+    refundSaleFromOrder,
+    getProducts,
+    getCustomers,
+    createCustomer,
+    createOrder
 } from "../firebase/firestore.js";
 
 
@@ -25,6 +29,21 @@ let currentFilters = {
     search: ""
 };
 
+let newSaleState = {
+    products: [],
+    customers: [],
+    cart: [],
+    selectedCustomer: null,
+    selectedProduct: null,
+    salesChannel: "marketplace",
+    paymentMethod: "cash",
+    paymentStatus: "paid",
+    shipping: 0,
+    discount: 0,
+    requiresProduction: false,
+    profile: null
+};
+
 
 // ========================================
 // ENTERPRISE ORDERS
@@ -33,6 +52,8 @@ let currentFilters = {
 export async function EnterpriseOrders(
     profile
 ) {
+
+    newSaleState.profile = profile;
 
     const content = `
         <section
@@ -3317,25 +3338,689 @@ function initNewSaleButton() {
             "#enterprise-orders-new-sale"
         );
 
-
     if (!button) {
-
         return;
-
     }
-
 
     button.addEventListener(
         "click",
-        () => {
-
-            console.log(
-                "Nueva venta seleccionada."
-            );
-
+        async () => {
+            await openNewSalePOS();
         }
     );
 
+}
+
+
+// ========================================
+// NEW SALE — POS
+// ========================================
+
+async function openNewSalePOS() {
+
+    closeNewSalePOS();
+
+    newSaleState = {
+        products: [],
+        customers: [],
+        cart: [],
+        selectedCustomer: null,
+        selectedProduct: null,
+        salesChannel: "marketplace",
+        paymentMethod: "cash",
+        paymentStatus: "paid",
+        shipping: 0,
+        discount: 0,
+        requiresProduction: false,
+        profile: newSaleState.profile
+    };
+
+    try {
+        const [products, customers] = await Promise.all([
+            getProducts(),
+            getCustomers()
+        ]);
+
+        newSaleState.products =
+            Array.isArray(products)
+                ? products.filter(item => item?.active !== false)
+                : [];
+
+        newSaleState.customers =
+            Array.isArray(customers)
+                ? customers.filter(item => item?.active !== false)
+                : [];
+
+    } catch (error) {
+        console.error("Error cargando datos del POS:", error);
+        window.alert(error?.message || "No fue posible cargar clientes y productos.");
+        return;
+    }
+
+    const modal = document.createElement("div");
+    modal.id = "enterprise-orders-new-sale-pos";
+    modal.className = "enterprise-orders__pos";
+    modal.innerHTML = renderNewSalePOS();
+    document.body.appendChild(modal);
+
+    requestAnimationFrame(() => modal.classList.add("is-open"));
+
+    initNewSalePOSEvents(modal);
+    renderNewSalePOSCart(modal);
+    renderPOSCustomerResults(modal, "");
+}
+
+function renderNewSalePOS() {
+    return `
+        <div class="enterprise-orders__pos-backdrop" data-pos-close="true"></div>
+        <section class="enterprise-orders__pos-dialog" role="dialog" aria-modal="true" aria-labelledby="enterprise-orders-pos-title">
+            <header class="enterprise-orders__pos-header">
+                <div>
+                    <span class="enterprise-orders__pos-eyebrow">Point of Sale</span>
+                    <h2 id="enterprise-orders-pos-title">Nueva venta</h2>
+                    <p>Registra una venta de Marketplace, Facebook, Instagram u otro canal.</p>
+                </div>
+                <button type="button" class="enterprise-orders__pos-close" id="enterprise-orders-pos-close" aria-label="Cerrar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </header>
+
+            <div class="enterprise-orders__pos-body">
+                <div class="enterprise-orders__pos-main">
+
+                    <section class="enterprise-orders__pos-section">
+                        <div class="enterprise-orders__pos-section-heading">
+                            <div><span>01</span><h3>Cliente</h3></div>
+                            <button type="button" class="enterprise-orders__pos-secondary-button" id="enterprise-orders-pos-new-customer" ${newSaleState.profile?.role === "admin" ? "" : "disabled"}>
+                                <i class="fa-solid fa-user-plus"></i> Nuevo cliente
+                            </button>
+                        </div>
+                        <div class="enterprise-orders__pos-field">
+                            <label for="enterprise-orders-pos-customer-search">Buscar cliente</label>
+                            <div class="enterprise-orders__pos-search">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="search" id="enterprise-orders-pos-customer-search" placeholder="Nombre, teléfono o correo..." autocomplete="off">
+                            </div>
+                            <div id="enterprise-orders-pos-customer-results" class="enterprise-orders__pos-results"></div>
+                        </div>
+                        <div id="enterprise-orders-pos-selected-customer"></div>
+                    </section>
+
+                    <section class="enterprise-orders__pos-section">
+                        <div class="enterprise-orders__pos-section-heading">
+                            <div><span>02</span><h3>Productos</h3></div>
+                        </div>
+                        <div class="enterprise-orders__pos-field">
+                            <label for="enterprise-orders-pos-product-search">Buscar producto</label>
+                            <div class="enterprise-orders__pos-search">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="search" id="enterprise-orders-pos-product-search" placeholder="Nombre, SKU o categoría..." autocomplete="off">
+                            </div>
+                            <div id="enterprise-orders-pos-product-results" class="enterprise-orders__pos-results"></div>
+                        </div>
+                        <div id="enterprise-orders-pos-product-config"></div>
+                        <div id="enterprise-orders-pos-cart"></div>
+                    </section>
+
+                    <section class="enterprise-orders__pos-section">
+                        <div class="enterprise-orders__pos-section-heading">
+                            <div><span>03</span><h3>Datos de la venta</h3></div>
+                        </div>
+                        <div class="enterprise-orders__pos-grid">
+                            <div class="enterprise-orders__pos-field">
+                                <label>Canal de venta</label>
+                                <select id="enterprise-orders-pos-channel">
+                                    <option value="marketplace">Facebook Marketplace</option>
+                                    <option value="facebook">Facebook</option>
+                                    <option value="instagram">Instagram</option>
+                                    <option value="tiktok">TikTok</option>
+                                    <option value="whatsapp">WhatsApp</option>
+                                    <option value="web">Tienda web</option>
+                                    <option value="physical_store">Tienda física</option>
+                                    <option value="event">Evento</option>
+                                    <option value="other">Otro</option>
+                                </select>
+                            </div>
+                            <div class="enterprise-orders__pos-field">
+                                <label>Método de pago</label>
+                                <select id="enterprise-orders-pos-payment-method">
+                                    <option value="cash">Efectivo</option>
+                                    <option value="transfer">Transferencia</option>
+                                    <option value="card">Tarjeta</option>
+                                    <option value="other">Otro</option>
+                                </select>
+                            </div>
+                            <div class="enterprise-orders__pos-field">
+                                <label>Estado del pago</label>
+                                <select id="enterprise-orders-pos-payment-status">
+                                    <option value="paid">Pagado</option>
+                                    <option value="pending">Pendiente</option>
+                                </select>
+                            </div>
+                            <div class="enterprise-orders__pos-field">
+                                <label>Producción</label>
+                                <select id="enterprise-orders-pos-requires-production">
+                                    <option value="false">No requiere producción</option>
+                                    <option value="true">Requiere producción</option>
+                                </select>
+                            </div>
+                            <div class="enterprise-orders__pos-field">
+                                <label>Envío</label>
+                                <input type="number" id="enterprise-orders-pos-shipping" min="0" step="0.01" value="0">
+                            </div>
+                            <div class="enterprise-orders__pos-field">
+                                <label>Descuento</label>
+                                <input type="number" id="enterprise-orders-pos-discount" min="0" step="0.01" value="0">
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+
+                <aside class="enterprise-orders__pos-summary">
+                    <div class="enterprise-orders__pos-summary-sticky">
+                        <span class="enterprise-orders__pos-summary-eyebrow">Resumen</span>
+                        <h3>Nueva orden</h3>
+                        <div id="enterprise-orders-pos-summary-items"></div>
+                        <div class="enterprise-orders__pos-summary-lines">
+                            <div><span>Subtotal</span><strong id="enterprise-orders-pos-summary-subtotal">Q0.00</strong></div>
+                            <div><span>Envío</span><strong id="enterprise-orders-pos-summary-shipping">Q0.00</strong></div>
+                            <div><span>Descuento</span><strong id="enterprise-orders-pos-summary-discount">Q0.00</strong></div>
+                            <div class="enterprise-orders__pos-summary-total"><span>Total</span><strong id="enterprise-orders-pos-summary-total">Q0.00</strong></div>
+                        </div>
+                        <button type="button" class="enterprise-orders__pos-submit" id="enterprise-orders-pos-submit">
+                            <i class="fa-solid fa-check"></i> Crear pedido
+                        </button>
+                        <button type="button" class="enterprise-orders__pos-cancel" id="enterprise-orders-pos-cancel">Cancelar</button>
+                    </div>
+                </aside>
+            </div>
+        </section>
+    `;
+}
+
+function initNewSalePOSEvents(modal) {
+
+    const close = () => closeNewSalePOS();
+
+    modal.querySelector("#enterprise-orders-pos-close")?.addEventListener("click", close);
+    modal.querySelector("#enterprise-orders-pos-cancel")?.addEventListener("click", close);
+    modal.addEventListener("click", event => {
+        if (event.target.dataset.posClose === "true") close();
+    });
+
+    modal.querySelector("#enterprise-orders-pos-customer-search")?.addEventListener("input", event => {
+        renderPOSCustomerResults(modal, event.target.value);
+    });
+
+    modal.querySelector("#enterprise-orders-pos-product-search")?.addEventListener("input", event => {
+        renderPOSProductResults(modal, event.target.value);
+    });
+
+    modal.querySelector("#enterprise-orders-pos-channel")?.addEventListener("change", event => {
+        newSaleState.salesChannel = event.target.value;
+    });
+    modal.querySelector("#enterprise-orders-pos-payment-method")?.addEventListener("change", event => {
+        newSaleState.paymentMethod = event.target.value;
+    });
+    modal.querySelector("#enterprise-orders-pos-payment-status")?.addEventListener("change", event => {
+        newSaleState.paymentStatus = event.target.value;
+    });
+    modal.querySelector("#enterprise-orders-pos-requires-production")?.addEventListener("change", event => {
+        newSaleState.requiresProduction = event.target.value === "true";
+    });
+    modal.querySelector("#enterprise-orders-pos-shipping")?.addEventListener("input", event => {
+        newSaleState.shipping = Math.max(0, Number(event.target.value) || 0);
+        renderNewSalePOSSummary(modal);
+    });
+    modal.querySelector("#enterprise-orders-pos-discount")?.addEventListener("input", event => {
+        newSaleState.discount = Math.max(0, Number(event.target.value) || 0);
+        renderNewSalePOSSummary(modal);
+    });
+
+    modal.querySelector("#enterprise-orders-pos-new-customer")?.addEventListener("click", () => {
+        if (newSaleState.profile?.role !== "admin") {
+            window.alert("Solo un administrador puede crear un cliente desde Enterprise.");
+            return;
+        }
+        openPOSNewCustomerModal(modal);
+    });
+
+    modal.querySelector("#enterprise-orders-pos-submit")?.addEventListener("click", () => {
+        submitNewSalePOS(modal);
+    });
+}
+
+function renderPOSCustomerResults(modal, search = "") {
+
+    const container = modal.querySelector("#enterprise-orders-pos-customer-results");
+    if (!container) return;
+
+    const term = String(search || "").trim().toLowerCase();
+    const results = newSaleState.customers.filter(customer => {
+        if (!term) return true;
+        return [customer?.name, customer?.phone, customer?.email]
+            .map(value => String(value || "").toLowerCase())
+            .some(value => value.includes(term));
+    }).slice(0, 8);
+
+    container.innerHTML = results.length
+        ? results.map(customer => `
+            <button type="button" class="enterprise-orders__pos-result" data-pos-customer-id="${escapeHTML(customer.id)}">
+                <span><strong>${escapeHTML(customer.name || "Sin nombre")}</strong><small>${escapeHTML(customer.phone || customer.email || "Sin contacto")}</small></span>
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        `).join("")
+        : `<div class="enterprise-orders__pos-empty">No se encontraron clientes.</div>`;
+
+    container.querySelectorAll("[data-pos-customer-id]").forEach(button => {
+        button.addEventListener("click", () => {
+            const customer = newSaleState.customers.find(item => item.id === button.dataset.posCustomerId);
+            if (!customer) return;
+            newSaleState.selectedCustomer = customer;
+            renderPOSSelectedCustomer(modal);
+            container.innerHTML = "";
+            const input = modal.querySelector("#enterprise-orders-pos-customer-search");
+            if (input) input.value = "";
+        });
+    });
+}
+
+function renderPOSSelectedCustomer(modal) {
+
+    const container = modal.querySelector("#enterprise-orders-pos-selected-customer");
+    const customer = newSaleState.selectedCustomer;
+    if (!container) return;
+
+    container.innerHTML = customer
+        ? `
+            <div class="enterprise-orders__pos-selected">
+                <div><strong>${escapeHTML(customer.name || "Cliente")}</strong><span>${escapeHTML(customer.phone || "Sin teléfono")}${customer.email ? ` · ${escapeHTML(customer.email)}` : ""}</span></div>
+                <button type="button" id="enterprise-orders-pos-clear-customer" aria-label="Cambiar cliente"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        `
+        : "";
+
+    container.querySelector("#enterprise-orders-pos-clear-customer")?.addEventListener("click", () => {
+        newSaleState.selectedCustomer = null;
+        renderPOSSelectedCustomer(modal);
+        renderPOSCustomerResults(modal, "");
+    });
+}
+
+function renderPOSProductResults(modal, search = "") {
+
+    const container = modal.querySelector("#enterprise-orders-pos-product-results");
+    if (!container) return;
+
+    const term = String(search || "").trim().toLowerCase();
+    const results = newSaleState.products.filter(product => {
+        const variants = getPOSProductVariants(product);
+        const haystack = [
+            product?.name,
+            product?.title,
+            product?.sku,
+            product?.categoryName,
+            ...variants.map(item => `${item.colorName} ${item.sizeName} ${item.sku}`)
+        ].join(" ").toLowerCase();
+        return !term || haystack.includes(term);
+    }).slice(0, 10);
+
+    container.innerHTML = results.length
+        ? results.map(product => `
+            <button type="button" class="enterprise-orders__pos-result" data-pos-product-id="${escapeHTML(product.id)}">
+                <span><strong>${escapeHTML(product.name || product.title || "Producto")}</strong><small>${getPOSProductVariants(product).length} variantes</small></span>
+                <i class="fa-solid fa-plus"></i>
+            </button>
+        `).join("")
+        : `<div class="enterprise-orders__pos-empty">No se encontraron productos.</div>`;
+
+    container.querySelectorAll("[data-pos-product-id]").forEach(button => {
+        button.addEventListener("click", () => {
+            const product = newSaleState.products.find(item => item.id === button.dataset.posProductId);
+            if (!product) return;
+            newSaleState.selectedProduct = product;
+            renderPOSProductConfig(modal);
+        });
+    });
+}
+
+function getPOSProductVariants(product) {
+
+    const variants = Array.isArray(product?.variants) ? product.variants : [];
+    const rows = [];
+
+    variants.forEach(variant => {
+        if (Array.isArray(variant?.sizes)) {
+            variant.sizes.forEach(size => {
+                if (variant?.active === false || size?.active === false) return;
+                rows.push({
+                    id: `${variant.id || variant.name}-${size.id || size.name}`,
+                    colorName: variant.name || "Sin color",
+                    sizeName: size.name || "Única",
+                    sku: size.sku || "",
+                    price: Number(size.price || 0),
+                    label: `${variant.name || "Sin color"} / ${size.name || "Única"}${size.sku ? ` · ${size.sku}` : ""}`
+                });
+            });
+            return;
+        }
+        if (variant?.active === false) return;
+        rows.push({
+            id: variant.id || variant.sku || variant.name,
+            colorName: variant.colorName || "",
+            sizeName: variant.name || "Única",
+            sku: variant.sku || "",
+            price: Number(variant.price || 0),
+            label: `${variant.colorName || ""}${variant.name ? ` / ${variant.name}` : ""}${variant.sku ? ` · ${variant.sku}` : ""}`
+        });
+    });
+
+    return rows;
+}
+
+function renderPOSProductConfig(modal) {
+
+    const container = modal.querySelector("#enterprise-orders-pos-product-config");
+    const product = newSaleState.selectedProduct;
+    if (!container) return;
+
+    if (!product) {
+        container.innerHTML = "";
+        return;
+    }
+
+    const variants = getPOSProductVariants(product);
+
+    container.innerHTML = `
+        <div class="enterprise-orders__pos-product-config">
+            <div><strong>${escapeHTML(product.name || product.title || "Producto")}</strong><span>Selecciona variante y cantidad</span></div>
+            <div class="enterprise-orders__pos-product-config-grid">
+                <select id="enterprise-orders-pos-variant">
+                    <option value="">${variants.length ? "Seleccionar variante" : "Sin variante"}</option>
+                    ${variants.map(variant => `<option value="${escapeHTML(variant.id)}">${escapeHTML(variant.label)} · Q${variant.price.toFixed(2)}</option>`).join("")}
+                </select>
+                <input type="number" id="enterprise-orders-pos-quantity" min="1" step="1" value="1">
+                <button type="button" class="enterprise-orders__pos-add-product" id="enterprise-orders-pos-add-product"><i class="fa-solid fa-plus"></i> Agregar</button>
+            </div>
+        </div>
+    `;
+
+    container.querySelector("#enterprise-orders-pos-add-product")?.addEventListener("click", () => {
+
+        const variantId = container.querySelector("#enterprise-orders-pos-variant")?.value || "";
+        const quantity = Math.max(1, parseInt(container.querySelector("#enterprise-orders-pos-quantity")?.value, 10) || 1);
+        const variant = variants.find(item => item.id === variantId);
+
+        if (variants.length && !variant) {
+            window.alert("Selecciona una variante.");
+            return;
+        }
+
+        const price = Number(variant?.price ?? product?.price ?? 0);
+        if (!Number.isFinite(price) || price < 0) {
+            window.alert("El producto no tiene un precio válido.");
+            return;
+        }
+
+        const item = {
+            productId: product.id,
+            productName: product.name || product.title || "Producto",
+            variantId: variant?.id || null,
+            variantName: variant?.label || null,
+            colorName: variant?.colorName || null,
+            sizeName: variant?.sizeName || null,
+            sku: variant?.sku || product?.sku || null,
+            price,
+            quantity,
+            lineTotal: price * quantity
+        };
+
+        const existing = newSaleState.cart.find(itemInCart => itemInCart.productId === item.productId && itemInCart.variantId === item.variantId);
+        if (existing) {
+            existing.quantity += quantity;
+            existing.lineTotal = existing.price * existing.quantity;
+        } else {
+            newSaleState.cart.push(item);
+        }
+
+        newSaleState.selectedProduct = null;
+        container.innerHTML = "";
+        modal.querySelector("#enterprise-orders-pos-product-search").value = "";
+        modal.querySelector("#enterprise-orders-pos-product-results").innerHTML = "";
+        renderNewSalePOSCart(modal);
+    });
+}
+
+function renderNewSalePOSCart(modal) {
+
+    const container = modal.querySelector("#enterprise-orders-pos-cart");
+    if (!container) return;
+
+    container.innerHTML = newSaleState.cart.length
+        ? `<div class="enterprise-orders__pos-cart-list">${newSaleState.cart.map((item, index) => `
+            <article class="enterprise-orders__pos-cart-item">
+                <div><strong>${escapeHTML(item.productName)}</strong><span>${item.variantName ? escapeHTML(item.variantName) : ""}${item.sku ? ` · ${escapeHTML(item.sku)}` : ""}</span></div>
+                <div class="enterprise-orders__pos-cart-controls">
+                    <input type="number" min="1" value="${item.quantity}" data-pos-cart-quantity="${index}">
+                    <strong>Q${Number(item.lineTotal).toFixed(2)}</strong>
+                    <button type="button" data-pos-cart-remove="${index}" aria-label="Eliminar"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </article>
+        `).join("")}</div>`
+        : `<div class="enterprise-orders__pos-cart-empty">Agrega productos para construir el pedido.</div>`;
+
+    container.querySelectorAll("[data-pos-cart-quantity]").forEach(input => input.addEventListener("change", () => {
+        const index = Number(input.dataset.posCartQuantity);
+        const quantity = Math.max(1, parseInt(input.value, 10) || 1);
+        newSaleState.cart[index].quantity = quantity;
+        newSaleState.cart[index].lineTotal = newSaleState.cart[index].price * quantity;
+        renderNewSalePOSCart(modal);
+    }));
+
+    container.querySelectorAll("[data-pos-cart-remove]").forEach(button => button.addEventListener("click", () => {
+        newSaleState.cart.splice(Number(button.dataset.posCartRemove), 1);
+        renderNewSalePOSCart(modal);
+    }));
+
+    renderNewSalePOSSummary(modal);
+}
+
+function renderNewSalePOSSummary(modal) {
+
+    const subtotal = newSaleState.cart.reduce((sum, item) => sum + Number(item.lineTotal || 0), 0);
+    const shipping = Math.max(0, Number(newSaleState.shipping || 0));
+    const discount = Math.min(subtotal + shipping, Math.max(0, Number(newSaleState.discount || 0)));
+    const total = Math.max(0, subtotal + shipping - discount);
+
+    const items = modal.querySelector("#enterprise-orders-pos-summary-items");
+    if (items) {
+        items.innerHTML = newSaleState.cart.length
+            ? newSaleState.cart.map(item => `<div class="enterprise-orders__pos-summary-item"><span>${escapeHTML(item.productName)} × ${item.quantity}</span><strong>Q${Number(item.lineTotal).toFixed(2)}</strong></div>`).join("")
+            : `<div class="enterprise-orders__pos-summary-empty">Sin productos</div>`;
+    }
+
+    const values = {
+        "enterprise-orders-pos-summary-subtotal": subtotal,
+        "enterprise-orders-pos-summary-shipping": shipping,
+        "enterprise-orders-pos-summary-discount": discount,
+        "enterprise-orders-pos-summary-total": total
+    };
+
+    Object.entries(values).forEach(([id, value]) => {
+        const element = modal.querySelector(`#${id}`);
+        if (element) element.textContent = `Q${value.toFixed(2)}`;
+    });
+}
+
+async function submitNewSalePOS(modal) {
+
+    const submitButton = modal.querySelector("#enterprise-orders-pos-submit");
+
+    if (!newSaleState.selectedCustomer) {
+        window.alert("Selecciona un cliente antes de crear el pedido.");
+        return;
+    }
+
+    if (!newSaleState.cart.length) {
+        window.alert("Agrega al menos un producto.");
+        return;
+    }
+
+    const subtotal = newSaleState.cart.reduce((sum, item) => sum + Number(item.lineTotal || 0), 0);
+    const shipping = Math.max(0, Number(newSaleState.shipping || 0));
+    const discount = Math.min(subtotal + shipping, Math.max(0, Number(newSaleState.discount || 0)));
+    const total = Math.max(0, subtotal + shipping - discount);
+
+    if (!Number.isFinite(total) || total <= 0) {
+        window.alert("El total del pedido debe ser mayor a Q0.00.");
+        return;
+    }
+
+    submitButton.disabled = true;
+    submitButton.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Creando pedido...`;
+
+    try {
+
+        const orderId = await createOrder({
+            customer: newSaleState.selectedCustomer,
+            items: newSaleState.cart,
+            subtotal,
+            shipping,
+            discount,
+            total,
+            orderStatus: "confirmed",
+            paymentStatus: newSaleState.paymentStatus,
+            paymentMethod: newSaleState.paymentMethod,
+            productionStatus: newSaleState.requiresProduction ? "pending" : "not_required",
+            requiresProduction: newSaleState.requiresProduction,
+            salesChannel: newSaleState.salesChannel
+        });
+
+        console.log("✓ Pedido creado desde POS:", { orderId });
+        closeNewSalePOS();
+        await loadOrders();
+        renderOrders();
+
+    } catch (error) {
+        console.error("Error creando pedido desde POS:", error);
+        submitButton.disabled = false;
+        submitButton.innerHTML = `<i class="fa-solid fa-check"></i> Crear pedido`;
+        window.alert(error?.message || "No fue posible crear el pedido.");
+    }
+}
+
+async function openPOSNewCustomerModal(parentModal) {
+
+    const modal = document.createElement("div");
+    modal.className = "enterprise-orders__pos-customer-modal";
+    modal.innerHTML = `
+        <div class="enterprise-orders__pos-customer-backdrop" data-pos-customer-close="true"></div>
+        <section class="enterprise-orders__pos-customer-dialog" role="dialog" aria-modal="true">
+            <header class="enterprise-orders__pos-customer-header">
+                <div><span>Nuevo cliente</span><h3>Registrar cliente</h3></div>
+                <button type="button" id="enterprise-orders-pos-customer-close" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+            </header>
+            <div class="enterprise-orders__pos-customer-form">
+                <div class="enterprise-orders__pos-field"><label>Nombre *</label><input type="text" id="enterprise-orders-pos-customer-name"></div>
+                <div class="enterprise-orders__pos-field"><label>Teléfono *</label><input type="tel" id="enterprise-orders-pos-customer-phone"></div>
+                <div class="enterprise-orders__pos-field"><label>Correo</label><input type="email" id="enterprise-orders-pos-customer-email"></div>
+                <div class="enterprise-orders__pos-field"><label>Dirección</label><input type="text" id="enterprise-orders-pos-customer-address"></div>
+            </div>
+            <div class="enterprise-orders__pos-customer-actions">
+                <button type="button" class="enterprise-orders__pos-cancel" id="enterprise-orders-pos-customer-cancel">Cancelar</button>
+                <button type="button" class="enterprise-orders__pos-submit" id="enterprise-orders-pos-customer-save">Crear cliente</button>
+            </div>
+        </section>
+    `;
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => modal.classList.add("is-open"));
+
+    const close = () => modal.remove();
+    modal.querySelector("#enterprise-orders-pos-customer-close")?.addEventListener("click", close);
+    modal.querySelector("#enterprise-orders-pos-customer-cancel")?.addEventListener("click", close);
+    modal.addEventListener("click", event => {
+        if (event.target.dataset.posCustomerClose === "true") close();
+    });
+
+    modal.querySelector("#enterprise-orders-pos-customer-save")?.addEventListener("click", async () => {
+
+        const saveButton = modal.querySelector("#enterprise-orders-pos-customer-save");
+        const name = modal.querySelector("#enterprise-orders-pos-customer-name")?.value.trim();
+        const phone = modal.querySelector("#enterprise-orders-pos-customer-phone")?.value.trim();
+        const email = modal.querySelector("#enterprise-orders-pos-customer-email")?.value.trim();
+        const addressLine = modal.querySelector("#enterprise-orders-pos-customer-address")?.value.trim();
+
+        if (!name || !phone) {
+            window.alert("Nombre y teléfono son obligatorios.");
+            return;
+        }
+
+        saveButton.disabled = true;
+        saveButton.textContent = "Creando...";
+
+        try {
+            const customerId = await createCustomer({
+                name,
+                phone,
+                email,
+                address: {
+                    line1: addressLine,
+                    line2: "",
+                    city: "",
+                    department: "",
+                    country: "Guatemala",
+                    postalCode: ""
+                },
+                acquisitionSource: newSaleState.salesChannel
+            });
+
+            const createdCustomer = {
+                id: customerId,
+                name,
+                phone,
+                email,
+                address: {
+                    line1: addressLine,
+                    country: "Guatemala"
+                },
+                active: true,
+                acquisitionSource: newSaleState.salesChannel
+            };
+
+            newSaleState.customers.push(createdCustomer);
+            newSaleState.selectedCustomer = createdCustomer;
+            renderPOSSelectedCustomer(parentModal);
+            close();
+
+        } catch (error) {
+            console.error("Error creando cliente desde POS:", error);
+            saveButton.disabled = false;
+            saveButton.textContent = "Crear cliente";
+            window.alert(error?.message || "No fue posible crear el cliente.");
+        }
+    });
+}
+
+function closeNewSalePOS() {
+    const modal = document.querySelector("#enterprise-orders-new-sale-pos");
+    if (!modal) return;
+    modal.classList.remove("is-open");
+    window.setTimeout(() => modal.remove(), 160);
+}
+
+function focusPOSCustomerSearch(modal) {
+    window.setTimeout(() => {
+        modal.querySelector("#enterprise-orders-pos-customer-search")?.focus();
+    }, 50);
+}
+
+function escapeAttribute(value) {
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
 }
 
 

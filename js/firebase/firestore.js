@@ -855,6 +855,218 @@ export async function getOrders() {
 }
 
 // ========================================
+// CREATE ORDER — ENTERPRISE POS
+// ========================================
+
+export async function createOrder(orderData = {}) {
+
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+        throw new Error("No hay una cuenta Enterprise autenticada.");
+    }
+
+    const customer = orderData.customer || {};
+    const items = Array.isArray(orderData.items) ? orderData.items : [];
+
+    if (!customer.id) {
+        throw new Error("El cliente es obligatorio.");
+    }
+
+    if (!items.length) {
+        throw new Error("El pedido debe contener al menos un producto.");
+    }
+
+    const subtotal = Number(orderData.subtotal || 0);
+    const shipping = Math.max(0, Number(orderData.shipping || 0));
+    const discount = Math.max(0, Number(orderData.discount || 0));
+    const total = Math.max(0, Number(orderData.total ?? subtotal + shipping - discount));
+
+    if (!Number.isFinite(total) || total <= 0) {
+        throw new Error("El total del pedido debe ser mayor a Q0.00.");
+    }
+
+    const ordersRef = collection(db, "orders");
+    const snapshot = await getDocs(ordersRef);
+
+    const maxOrderNumber = snapshot.docs.reduce(
+        (max, orderDoc) => {
+            const value = Number(orderDoc.data()?.orderNumber);
+            return Number.isFinite(value) ? Math.max(max, value) : max;
+        },
+        1000
+    );
+
+    const orderNumber = maxOrderNumber + 1;
+
+    const normalizedItems = items.map(item => ({
+        productId: item.productId || null,
+        productName: String(item.productName || "Producto").trim(),
+        variantId: item.variantId || null,
+        variantName: item.variantName || null,
+        colorName: item.colorName || null,
+        sizeName: item.sizeName || null,
+        sku: item.sku || null,
+        price: Number(item.price || 0),
+        quantity: Math.max(1, Number(item.quantity || 1)),
+        lineTotal: Number(item.lineTotal || 0)
+    }));
+
+    const userProfile = await getUserProfile(currentUser.uid);
+    const createdByName =
+        userProfile?.name ||
+        userProfile?.displayName ||
+        userProfile?.fullName ||
+        currentUser.displayName ||
+        currentUser.email ||
+        "Usuario";
+
+    const requiresProduction = orderData.requiresProduction === true;
+    const paymentStatus = orderData.paymentStatus === "pending" ? "pending" : "paid";
+
+    const orderDataToSave = {
+        orderNumber,
+        customerId: customer.id,
+        customerSnapshot: {
+            name: customer.name || "",
+            email: customer.email || "",
+            phone: customer.phone || "",
+            address: customer.address || {}
+        },
+        items: normalizedItems,
+        subtotal,
+        discount,
+        shipping,
+        total,
+        orderStatus: orderData.orderStatus || "confirmed",
+        paymentStatus,
+        productionStatus: requiresProduction ? "pending" : "not_required",
+        requiresProduction,
+        paymentMethod: orderData.paymentMethod || "other",
+        salesChannel: orderData.salesChannel || "manual",
+        source: "enterprise",
+        createdByUid: currentUser.uid,
+        createdByName,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+    };
+
+    const orderRef = await addDoc(
+        ordersRef,
+        orderDataToSave
+    );
+
+    if (requiresProduction) {
+
+        const existingProductionOrders =
+            await getProductionOrders();
+
+        const maxProductionNumber =
+            existingProductionOrders.reduce(
+                (max, productionOrder) => {
+
+                    const value =
+                        Number(
+                            productionOrder.productionNumber
+                        );
+
+                    return Number.isFinite(value)
+                        ? Math.max(max, value)
+                        : max;
+
+                },
+                1000
+            );
+
+        const productionRef =
+            collection(
+                db,
+                "productionOrders"
+            );
+
+        const productionBatch =
+            writeBatch(db);
+
+        normalizedItems.forEach(
+            (item, index) => {
+
+                const productionRefDoc =
+                    doc(productionRef);
+
+                productionBatch.set(
+                    productionRefDoc,
+                    {
+                        productionNumber:
+                            maxProductionNumber +
+                            index +
+                            1,
+
+                        orderId:
+                            orderRef.id,
+
+                        productId:
+                            item.productId,
+
+                        productName:
+                            item.productName,
+
+                        variantId:
+                            item.variantId,
+
+                        variantName:
+                            item.variantName,
+
+                        sku:
+                            item.sku,
+
+                        quantity:
+                            item.quantity,
+
+                        supplierId:
+                            null,
+
+                        unitCost:
+                            0,
+
+                        totalCost:
+                            0,
+
+                        status:
+                            "pending",
+
+                        notes:
+                            "",
+
+                        createdAt:
+                            serverTimestamp(),
+
+                        updatedAt:
+                            serverTimestamp()
+
+                    }
+                );
+
+            }
+        );
+
+        await productionBatch.commit();
+
+    }
+
+    console.log(
+        "✓ Pedido creado desde Enterprise POS:",
+        {
+            orderId: orderRef.id,
+            orderNumber
+        }
+    );
+
+    return orderRef.id;
+
+}
+
+
+// ========================================
 // GET INVENTORY
 // ========================================
 
@@ -2106,24 +2318,190 @@ export async function updatePaymentStatus(
 
 }
 
-export async function updateProductionStatus(
-    orderId,
-    status
+async function ensureProductionOrdersForOrder(
+    orderId
 ) {
 
     const productionOrders =
         await getProductionOrders();
 
-    const productionOrder =
-        productionOrders.find(
-            order =>
-                order.orderId === orderId
+    const relatedOrders =
+        productionOrders.filter(
+            productionOrder =>
+                productionOrder.orderId === orderId
         );
 
-    if (!productionOrder) {
+    if (relatedOrders.length) {
+        return relatedOrders;
+    }
+
+    const order =
+        await getOrder(orderId);
+
+    if (!order) {
         throw new Error(
-            `No se encontró productionOrder relacionado con el pedido ${orderId}`
+            "No se encontró el pedido."
         );
+    }
+
+    if (order.requiresProduction !== true) {
+        throw new Error(
+            "Este pedido no requiere producción."
+        );
+    }
+
+    const items =
+        Array.isArray(order.items)
+            ? order.items
+            : [];
+
+    if (!items.length) {
+        throw new Error(
+            "El pedido no contiene productos para producción."
+        );
+    }
+
+    const productionRef =
+        collection(
+            db,
+            "productionOrders"
+        );
+
+    const maxProductionNumber =
+        productionOrders.reduce(
+            (max, productionOrder) => {
+
+                const value =
+                    Number(
+                        productionOrder.productionNumber
+                    );
+
+                return Number.isFinite(value)
+                    ? Math.max(max, value)
+                    : max;
+
+            },
+            1000
+        );
+
+    const batch =
+        writeBatch(db);
+
+    items.forEach(
+        (item, index) => {
+
+            const productionRefDoc =
+                doc(productionRef);
+
+            batch.set(
+                productionRefDoc,
+                {
+                    productionNumber:
+                        maxProductionNumber +
+                        index +
+                        1,
+
+                    orderId,
+
+                    productId:
+                        item.productId ||
+                        null,
+
+                    productName:
+                        item.productName ||
+                        "Producto",
+
+                    variantId:
+                        item.variantId ||
+                        null,
+
+                    variantName:
+                        item.variantName ||
+                        null,
+
+                    sku:
+                        item.sku ||
+                        null,
+
+                    quantity:
+                        Math.max(
+                            1,
+                            Number(
+                                item.quantity || 1
+                            )
+                        ),
+
+                    supplierId:
+                        null,
+
+                    unitCost:
+                        0,
+
+                    totalCost:
+                        0,
+
+                    status:
+                        order.productionStatus ===
+                        "not_required"
+                            ? "pending"
+                            : (
+                                order.productionStatus ||
+                                "pending"
+                            ),
+
+                    notes:
+                        "",
+
+                    createdAt:
+                        serverTimestamp(),
+
+                    updatedAt:
+                        serverTimestamp()
+
+                }
+            );
+
+        }
+    );
+
+    await batch.commit();
+
+    return await getProductionOrders().then(
+        allProductionOrders =>
+            allProductionOrders.filter(
+                productionOrder =>
+                    productionOrder.orderId ===
+                    orderId
+            )
+    );
+
+}
+
+export async function updateProductionStatus(
+    orderId,
+    status
+) {
+
+    let productionOrders =
+        await getProductionOrders();
+
+    let relatedOrders =
+        productionOrders.filter(
+            productionOrder =>
+                productionOrder.orderId ===
+                orderId
+        );
+
+    // Reparación automática de pedidos Enterprise
+    // creados con requiresProduction=true antes
+    // de que existiera su productionOrder.
+    if (!relatedOrders.length) {
+
+        relatedOrders =
+            await ensureProductionOrdersForOrder(
+                orderId
+            );
+
     }
 
     const orderRef =
@@ -2133,31 +2511,40 @@ export async function updateProductionStatus(
             orderId
         );
 
-    const productionOrderRef =
-        doc(
-            db,
-            "productionOrders",
-            productionOrder.id
-        );
-
     const batch =
         writeBatch(db);
 
     batch.update(
         orderRef,
         {
-            productionStatus: status,
+            productionStatus:
+                status,
+
             updatedAt:
                 serverTimestamp()
         }
     );
 
-    batch.update(
-        productionOrderRef,
-        {
-            status,
-            updatedAt:
-                serverTimestamp()
+    relatedOrders.forEach(
+        productionOrder => {
+
+            const productionOrderRef =
+                doc(
+                    db,
+                    "productionOrders",
+                    productionOrder.id
+                );
+
+            batch.update(
+                productionOrderRef,
+                {
+                    status,
+
+                    updatedAt:
+                        serverTimestamp()
+                }
+            );
+
         }
     );
 
@@ -2167,13 +2554,17 @@ export async function updateProductionStatus(
         "✓ Estado de producción sincronizado:",
         {
             orderId,
-            productionOrderId:
-                productionOrder.id,
+            productionOrderIds:
+                relatedOrders.map(
+                    productionOrder =>
+                        productionOrder.id
+                ),
             status
         }
     );
 
 }
+
 // ========================================
 // UPDATE PRODUCT
 // ========================================
