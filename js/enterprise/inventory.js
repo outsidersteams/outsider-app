@@ -178,6 +178,12 @@ export async function initEnterpriseInventory(
     }
 
 
+    // Inicializar aquí permite que "Nuevo inventario"
+    // funcione incluso cuando todavía no existen
+    // registros de inventario.
+    initNewInventoryFlow();
+
+
     const params =
         new URLSearchParams(
             window.location.search
@@ -372,8 +378,6 @@ async function renderInventoryList(
 
         `;
 
-
-        initNewInventoryFlow();
 
         // =================================
         // DETAIL NAVIGATION
@@ -1285,7 +1289,7 @@ function renderNewInventoryVariantResults(
                                 <button
                                     type="button"
                                     class="enterprise-inventory__card-action"
-                                    data-select-variant-id="${safeId}"
+                                    data-select-variant-index="${index}"
                                     ${active ? "" : "disabled"}
                                 >
                                     ${
@@ -1315,46 +1319,55 @@ function renderNewInventoryVariantResults(
     `;
 
 
-    const selectButtons =
-        results.querySelectorAll(
-            "[data-select-variant-id]"
-        );
+    results.onclick = event => {
 
-
-    selectButtons.forEach(
-        button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    const variantId =
-                        button.dataset
-                            .selectVariantId;
-
-                    const variant =
-                        variants.find(
-                            item =>
-                                String(
-                                    item?.id
-                                ) === String(
-                                    variantId
-                                )
-                        );
-
-                    if (!variant) {
-                        return;
-                    }
-
-                    selectNewInventoryVariant(
-                        variant
-                    );
-
-                }
+        const button =
+            event.target.closest(
+                "[data-select-variant-index]"
             );
 
+        if (!button) {
+            return;
         }
-    );
+
+        if (button.disabled) {
+            return;
+        }
+
+        const index =
+            Number(
+                button.dataset
+                    .selectVariantIndex
+            );
+
+        if (
+            !Number.isInteger(index) ||
+            index < 0 ||
+            index >= variants.length
+        ) {
+            console.error(
+                "Índice de variante inválido:",
+                index
+            );
+            return;
+        }
+
+        const variant =
+            variants[index];
+
+        if (!variant) {
+            console.error(
+                "No se encontró la variante seleccionada:",
+                index
+            );
+            return;
+        }
+
+        selectNewInventoryVariant(
+            variant
+        );
+
+    };
 
 }
 
