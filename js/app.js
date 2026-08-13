@@ -24,25 +24,11 @@ observeAuth(async (user) => {
 
     if (user) {
 
-        console.log(
-            "Usuario autenticado:",
-            user.uid
-        );
-
-        console.log(
-            "Email:",
-            user.email
-        );
-
         try {
 
             const profile =
                 await getCurrentUserProfile();
 
-            console.log(
-                "Usuario completo:",
-                profile
-            );
 
         } catch (error) {
 
@@ -55,9 +41,6 @@ observeAuth(async (user) => {
 
     } else {
 
-        console.log(
-            "No hay usuario autenticado"
-        );
 
     }
 
@@ -80,28 +63,13 @@ app.innerHTML = `
 `;
 
 
-console.log("Outsider iniciado correctamente");
-
-console.log("Firebase conectado correctamente");
-
-console.log("Firebase App:", firebaseApp);
-
-
 async function testFirestore() {
-
-    console.log(
-        "========== FIRESTORE TEST =========="
-    );
 
     try {
 
         const categories =
             await getCategories();
 
-        console.log(
-            "✓ Categorías:",
-            categories
-        );
 
     } catch (error) {
 
@@ -118,10 +86,6 @@ async function testFirestore() {
         const products =
             await getProducts();
 
-        console.log(
-            "✓ Productos:",
-            products
-        );
 
     } catch (error) {
 
@@ -138,10 +102,6 @@ async function testFirestore() {
         const customers =
             await getCustomers();
 
-        console.log(
-            "✓ Clientes:",
-            customers
-        );
 
     } catch (error) {
 
@@ -158,11 +118,6 @@ async function testFirestore() {
         const orders =
             await getOrders();
 
-        console.log(
-            "✓ Pedidos:",
-            orders
-        );
-
     } catch (error) {
 
         console.error(
@@ -178,10 +133,6 @@ async function testFirestore() {
         const inventory =
             await getInventory();
 
-        console.log(
-            "✓ Inventario:",
-            inventory
-        );
 
     } catch (error) {
 
@@ -198,10 +149,6 @@ async function testFirestore() {
         const inventoryMovements =
             await getInventoryMovements();
 
-        console.log(
-            "✓ Movimientos:",
-            inventoryMovements
-        );
 
     } catch (error) {
 
@@ -218,10 +165,6 @@ async function testFirestore() {
         const productionOrders =
             await getProductionOrders();
 
-        console.log(
-            "✓ Producción:",
-            productionOrders
-        );
 
     } catch (error) {
 
@@ -233,9 +176,6 @@ async function testFirestore() {
     }
 
 
-    console.log(
-        "========== FIRESTORE TEST END =========="
-    );
 }
 
 

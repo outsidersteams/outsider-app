@@ -463,10 +463,6 @@ async function loadOrders() {
             orders;
 
 
-        console.log(
-            "Pedidos cargados:",
-            ordersState
-        );
 
 
     } catch (error) {
@@ -2891,14 +2887,6 @@ function openSaleConfirmationModal(
                         order.id
                     );
 
-                console.log(
-                    "✓ Venta registrada desde Enterprise:",
-                    {
-                        orderId: order.id,
-                        orderNumber: order.orderNumber,
-                        saleId: result?.saleId
-                    }
-                );
 
                 close();
 
@@ -3897,7 +3885,6 @@ async function submitNewSalePOS(modal) {
             salesChannel: newSaleState.salesChannel
         });
 
-        console.log("✓ Pedido creado desde POS:", { orderId });
         closeNewSalePOS();
         await loadOrders();
         renderOrders();
@@ -4426,10 +4413,6 @@ function openRefundAuthorizationModal(
                         reason
                     );
 
-                console.log(
-                    "✓ Reembolso registrado:",
-                    result
-                );
 
                 close();
 
