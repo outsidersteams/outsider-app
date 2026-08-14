@@ -22,14 +22,17 @@ import {
     EnterpriseProducts,
     initEnterpriseProducts
 } from "./enterprise/products.js";
+
 import {
     EnterpriseInventory,
     initEnterpriseInventory
 } from "./enterprise/inventory.js";
+
 import {
     EnterpriseCustomers,
     initEnterpriseCustomers
 } from "./enterprise/customers.js";
+
 import {
     checkEnterpriseAccess
 } from "./enterprise/authGuard.js";
@@ -43,37 +46,53 @@ import {
     initCustomerHome
 } from "./customer/home.js";
 
+import {
+    CustomerShop,
+    initCustomerShop
+} from "./customer/shop.js";
+
+
 // ========================================
 // ROUTES
 // ========================================
 
 const routes = {
 
-    "/": CustomerHome,
+    // ====================================
+    // CUSTOMER
+    // ====================================
 
+    "/":
+        CustomerHome,
+
+    "/shop":
+        CustomerShop,
+
+
+    // ====================================
+    // ENTERPRISE
+    // ====================================
 
     "/enterprise/login":
         EnterpriseLogin,
 
-
     "/enterprise/dashboard":
         EnterpriseDashboard,
-
 
     "/enterprise/production":
         EnterpriseProduction,
 
-
     "/enterprise/orders":
         EnterpriseOrders,
 
-
     "/enterprise/products":
         EnterpriseProducts,
+
     "/enterprise/inventory":
-    EnterpriseInventory,
+        EnterpriseInventory,
+
     "/enterprise/customers":
-    EnterpriseCustomers,
+        EnterpriseCustomers,
 
 };
 
@@ -155,13 +174,13 @@ export async function router() {
     // ENTERPRISE ACCESS
     // ========================================
 
-   const isEnterpriseRoute =
-    path === "/enterprise/dashboard" ||
-    path === "/enterprise/production" ||
-    path === "/enterprise/orders" ||
-    path === "/enterprise/products" ||
-    path === "/enterprise/inventory" ||
-    path === "/enterprise/customers";
+    const isEnterpriseRoute =
+        path === "/enterprise/dashboard" ||
+        path === "/enterprise/production" ||
+        path === "/enterprise/orders" ||
+        path === "/enterprise/products" ||
+        path === "/enterprise/inventory" ||
+        path === "/enterprise/customers";
 
 
     let routeContent;
@@ -268,9 +287,6 @@ export async function router() {
         );
 
     }
-// ========================================
-// IMAGEKIT TEST INIT
-// ========================================
 
 
     // ========================================
@@ -325,32 +341,37 @@ export async function router() {
         );
 
     }
+
+
     // ========================================
-// ENTERPRISE INVENTORY INIT
-// ========================================
+    // ENTERPRISE INVENTORY INIT
+    // ========================================
 
-if (
-    path === "/enterprise/inventory"
-) {
+    if (
+        path === "/enterprise/inventory"
+    ) {
 
-    initEnterpriseInventory(
-        enterpriseProfile
-    );
+        initEnterpriseInventory(
+            enterpriseProfile
+        );
 
-}
-// ========================================
-// ENTERPRISE CUSTOMERS INIT
-// ========================================
+    }
 
-if (
-    path === "/enterprise/customers"
-) {
 
-    await initEnterpriseCustomers(
-        enterpriseProfile
-    );
+    // ========================================
+    // ENTERPRISE CUSTOMERS INIT
+    // ========================================
 
-}
+    if (
+        path === "/enterprise/customers"
+    ) {
+
+        await initEnterpriseCustomers(
+            enterpriseProfile
+        );
+
+    }
+
 
     // ========================================
     // CUSTOMER HOME INIT
@@ -364,8 +385,20 @@ if (
 
     }
 
-}
 
+    // ========================================
+    // CUSTOMER SHOP INIT
+    // ========================================
+
+    if (
+        path === "/shop"
+    ) {
+
+        await initCustomerShop();
+
+    }
+
+}
 
 
 // ========================================

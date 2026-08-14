@@ -34,7 +34,15 @@ $space-lg: 24px;
 $space-xl: 32px;
 $space-2xl: 48px;
 
-// Typography
+// ========================================
+// TYPOGRAPHY
+// ========================================
+
+$font-poppins:
+    "Poppins",
+    sans-serif;
+
+
 $font-primary:
     "Inter",
     system-ui,
@@ -42,6 +50,7 @@ $font-primary:
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
+
 
 $font-display:
     "Sedgwick Ave Display",
