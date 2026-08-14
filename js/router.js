@@ -38,23 +38,18 @@ import {
     initEnterpriseLayout
 } from "./components/enterpriseLayout.js";
 
+import {
+    CustomerHome,
+    initCustomerHome
+} from "./customer/home.js";
+
 // ========================================
 // ROUTES
 // ========================================
 
 const routes = {
 
-    "/": () => {
-
-        return `
-            <h1>OUTSIDER</h1>
-
-            <p>
-                Store pública
-            </p>
-        `;
-
-    },
+    "/": CustomerHome,
 
 
     "/enterprise/login":
@@ -357,7 +352,20 @@ if (
 
 }
 
+    // ========================================
+    // CUSTOMER HOME INIT
+    // ========================================
+
+    if (
+        path === "/"
+    ) {
+
+        await initCustomerHome();
+
+    }
+
 }
+
 
 
 // ========================================

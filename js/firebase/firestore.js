@@ -98,6 +98,53 @@ export async function getProducts() {
 }
 
 // ========================================
+// PARTNERS
+// ========================================
+
+export async function getPartners() {
+
+    const partnersRef =
+        collection(db, "partners");
+
+    const snapshot =
+        await getDocs(partnersRef);
+
+    return snapshot.docs
+        .map(document => ({
+            id:
+                document.id,
+            ...document.data()
+        }))
+        .filter(
+            partner =>
+                partner &&
+                partner.active !== false
+        )
+        .sort(
+            (a, b) => {
+                const orderA =
+                    Number(a.order);
+
+                const orderB =
+                    Number(b.order);
+
+                const normalizedA =
+                    Number.isFinite(orderA)
+                        ? orderA
+                        : Number.MAX_SAFE_INTEGER;
+
+                const normalizedB =
+                    Number.isFinite(orderB)
+                        ? orderB
+                        : Number.MAX_SAFE_INTEGER;
+
+                return normalizedA - normalizedB;
+            }
+        );
+
+}
+
+// ========================================
 // CREATE PRODUCT
 // ========================================
 
