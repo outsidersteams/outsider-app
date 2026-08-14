@@ -87,13 +87,39 @@ export async function getProducts() {
     const productsRef =
         collection(db, "products");
 
-    const snapshot =
-        await getDocs(productsRef);
 
-    return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-    }));
+    const productsQuery =
+        query(
+            productsRef,
+
+            where(
+                "active",
+                "==",
+                true
+            ),
+
+            where(
+                "publishedActive.web",
+                "==",
+                true
+            )
+        );
+
+
+    const snapshot =
+        await getDocs(
+            productsQuery
+        );
+
+
+    return snapshot.docs.map(
+        document => ({
+            id:
+                document.id,
+
+            ...document.data()
+        })
+    );
 
 }
 
