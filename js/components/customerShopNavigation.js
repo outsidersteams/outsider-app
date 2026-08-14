@@ -2,7 +2,19 @@
 // OUTSIDER — CUSTOMER SHOP NAVIGATION
 // ========================================
 
+const CART_STORAGE_KEY =
+    "customerCart";
+
+
+// ========================================
+// CUSTOMER SHOP NAVIGATION
+// ========================================
+
 export function CustomerShopNavigation() {
+
+    const cartCount =
+        getCartItemCount();
+
 
     return `
         <header class="customer-shop-navigation">
@@ -27,6 +39,10 @@ export function CustomerShopNavigation() {
 
             <div class="customer-shop-navigation__right">
 
+                <!-- ========================================
+                     SEARCH
+                     ======================================== -->
+
                 <button
                     type="button"
                     class="customer-shop-navigation__button"
@@ -42,6 +58,10 @@ export function CustomerShopNavigation() {
                 </button>
 
 
+                <!-- ========================================
+                     ACCOUNT
+                     ======================================== -->
+
                 <a
                     href="/account"
                     class="customer-shop-navigation__button"
@@ -55,16 +75,37 @@ export function CustomerShopNavigation() {
                 </a>
 
 
+                <!-- ========================================
+                     CART
+                     ======================================== -->
+
                 <a
                     href="/cart"
-                    class="customer-shop-navigation__button"
+                    class="customer-shop-navigation__button customer-shop-navigation__cart"
                     data-spa-link
                     aria-label="Carrito"
                 >
+
                     <i
                         class="fa-solid fa-bag-shopping"
                         aria-hidden="true"
                     ></i>
+
+
+                    ${
+                        cartCount > 0
+                            ? `
+                                <span
+                                    class="customer-shop-navigation__cart-count"
+                                    data-cart-count
+                                    aria-hidden="true"
+                                >
+                                    ${cartCount}
+                                </span>
+                            `
+                            : ""
+                    }
+
                 </a>
 
             </div>
@@ -91,6 +132,7 @@ export function CustomerShopNavigation() {
                         aria-hidden="true"
                     ></i>
 
+
                     <input
                         type="search"
                         id="customer-shop-search-input"
@@ -100,6 +142,7 @@ export function CustomerShopNavigation() {
                         spellcheck="false"
                         aria-label="Buscar productos"
                     >
+
 
                     <button
                         type="button"
@@ -119,4 +162,80 @@ export function CustomerShopNavigation() {
 
         </section>
     `;
+}
+
+
+// ========================================
+// CART COUNT
+// ========================================
+
+function getCartItemCount() {
+
+    try {
+
+        const storedCart =
+            localStorage.getItem(
+                CART_STORAGE_KEY
+            );
+
+
+        if (!storedCart) {
+            return 0;
+        }
+
+
+        const cart =
+            JSON.parse(
+                storedCart
+            );
+
+
+        if (!Array.isArray(cart)) {
+            return 0;
+        }
+
+
+        return cart.reduce(
+            (
+                total,
+                item
+            ) => {
+
+                const quantity =
+                    Number(
+                        item?.quantity || 0
+                    );
+
+
+                if (
+                    !Number.isFinite(
+                        quantity
+                    ) ||
+                    quantity <= 0
+                ) {
+                    return total;
+                }
+
+
+                return (
+                    total +
+                    Math.floor(quantity)
+                );
+
+            },
+            0
+        );
+
+    } catch (error) {
+
+        console.warn(
+            "No se pudo leer el contador del carrito:",
+            error
+        );
+
+
+        return 0;
+
+    }
+
 }

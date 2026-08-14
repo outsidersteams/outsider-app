@@ -216,6 +216,7 @@ export async function initCustomerProduct() {
         initProductOptions();
 
         initProductMenu();
+        updateCartCount();
 
 
     } catch (error) {
@@ -1535,47 +1536,51 @@ function addCurrentProductToCart() {
 
     const cartItem = {
 
-        productId:
-            currentProduct.id,
+    productId:
+        currentProduct.id,
 
-        productName:
-            currentProduct.name ||
-            "Producto",
+    productName:
+        currentProduct.name ||
+        "Producto",
 
-        variantId:
-            variant.id ||
-            null,
+    image:
+        getProductImages()[0] ||
+        "",
 
-        variantName:
-            variant.name ||
-            variant.color ||
-            variant.colorName ||
-            variant.id ||
-            null,
+    variantId:
+        variant.id ||
+        null,
 
-        sizeId:
-            size.id ||
-            null,
+    variantName:
+        variant.name ||
+        variant.color ||
+        variant.colorName ||
+        variant.id ||
+        null,
 
-        sizeName:
-            size.name ||
-            size.id ||
-            null,
+    sizeId:
+        size.id ||
+        null,
 
-        sku:
-            size.sku ||
-            null,
+    sizeName:
+        size.name ||
+        size.id ||
+        null,
 
-        price,
+    sku:
+        size.sku ||
+        null,
 
-        quantity:
-            1,
+    price,
 
-        fulfillmentType:
-            currentProduct?.fulfillment?.type ||
-            "physical"
+    quantity:
+        1,
 
-    };
+    fulfillmentType:
+        currentProduct?.fulfillment?.type ||
+        "physical"
+
+};
 
 
     let cart = [];
@@ -1664,18 +1669,128 @@ function addCurrentProductToCart() {
     }
 
 
-    localStorage.setItem(
-        "customerCart",
-        JSON.stringify(
-            cart
-        )
-    );
+ localStorage.setItem(
+    "customerCart",
+    JSON.stringify(
+        cart
+    )
+);
 
 
-    console.log(
-        "✓ Producto agregado al carrito:",
-        cartItem
-    );
+updateCartCount(
+    true
+);
+
+
+console.log(
+    "✓ Producto agregado al carrito:",
+    cartItem
+);
+
+}
+// ========================================
+// CART COUNT
+// ========================================
+
+function getCartItemCount() {
+
+    try {
+
+        const storedCart =
+            localStorage.getItem(
+                "customerCart"
+            );
+
+        const cart =
+            storedCart
+                ? JSON.parse(storedCart)
+                : [];
+
+        if (!Array.isArray(cart)) {
+            return 0;
+        }
+
+        return cart.reduce(
+            (total, item) => {
+
+                const quantity =
+                    Number(
+                        item?.quantity || 0
+                    );
+
+                return (
+                    total +
+                    (
+                        Number.isFinite(quantity)
+                            ? quantity
+                            : 0
+                    )
+                );
+
+            },
+            0
+        );
+
+    } catch (error) {
+
+        console.warn(
+            "No se pudo calcular el contador del carrito:",
+            error
+        );
+
+        return 0;
+
+    }
+
+}
+
+
+// ========================================
+// UPDATE CART COUNT
+// ========================================
+
+function updateCartCount(
+    animate = false
+) {
+
+    const countElement =
+        document.querySelector(
+            "[data-cart-count]"
+        );
+
+    if (!countElement) {
+        return;
+    }
+
+    const count =
+        getCartItemCount();
+
+
+    countElement.textContent =
+        String(count);
+
+
+    countElement.hidden =
+        count <= 0;
+
+
+    if (
+        animate &&
+        count > 0
+    ) {
+
+        countElement.classList.remove(
+            "is-bumping"
+        );
+
+        // Fuerza reinicio de la animación
+        void countElement.offsetWidth;
+
+        countElement.classList.add(
+            "is-bumping"
+        );
+
+    }
 
 }
 

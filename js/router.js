@@ -32,6 +32,10 @@ import {
     EnterpriseCustomers,
     initEnterpriseCustomers
 } from "./enterprise/customers.js";
+import {
+    CustomerCart,
+    initCustomerCart
+} from "./customer/cart.js";
 
 import {
     checkEnterpriseAccess
@@ -100,7 +104,8 @@ const routes = {
         EnterpriseCustomers,
     "/product":
     CustomerProduct,
-
+    "/cart":
+    CustomerCart,
 };
 
 
@@ -404,6 +409,17 @@ export async function router() {
         await initCustomerShop();
 
     }
+    // ========================================
+// CUSTOMER CART INIT
+// ========================================
+
+if (
+    path === "/cart"
+) {
+
+    initCustomerCart();
+
+}
     // ========================================
 // CUSTOMER PRODUCT INIT
 // ========================================

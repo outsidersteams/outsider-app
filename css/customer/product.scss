@@ -921,3 +921,70 @@
     }
 
 }
+// ========================================
+// CART COUNT
+// ========================================
+
+.customer-shop-navigation__cart {
+    position: relative;
+}
+
+
+.customer-shop-navigation__cart-count {
+    position: absolute;
+
+    top: -6px;
+    right: -7px;
+
+    min-width: 18px;
+    height: 18px;
+
+    padding: 0 5px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 999px;
+
+    background: $color-black;
+    color: $color-white;
+
+    font-family: $font-primary;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+
+    pointer-events: none;
+
+    transform-origin: center;
+}
+
+
+.customer-shop-navigation__cart-count.is-bumping {
+    animation:
+        customer-cart-count-bump
+        0.35s
+        ease-out;
+}
+
+
+@keyframes customer-cart-count-bump {
+
+    0% {
+        transform: scale(1);
+    }
+
+    45% {
+        transform: scale(1.35);
+    }
+
+    75% {
+        transform: scale(0.92);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+
+}
