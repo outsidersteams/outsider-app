@@ -1,6 +1,5 @@
 import {
-    getProducts,
-    getInventory
+    getProducts
 } from "../firebase/firestore.js";
 
 import {
@@ -17,8 +16,6 @@ import {
 
 
 let currentProduct = null;
-
-let currentInventory = [];
 
 let selectedVariantId = null;
 
@@ -147,20 +144,6 @@ export async function initCustomerProduct() {
 
             return;
         }
-
-
-        // ====================================
-        // INVENTORY
-        // ====================================
-
-        const inventory =
-            await getInventory();
-
-
-        currentInventory =
-            Array.isArray(inventory)
-                ? inventory
-                : [];
 
 
         // ====================================
@@ -798,7 +781,7 @@ function renderSizes() {
 
 
 // ========================================
-// INVENTORY — AVAILABILITY
+// AVAILABILITY
 // ========================================
 
 function isSizeAvailable(
@@ -815,6 +798,8 @@ function isSizeAvailable(
     // MADE TO ORDER
     // ====================================
 
+    // Los productos made_to_order nunca
+    // dependen de inventory.
     if (isMadeToOrder()) {
 
         return (
@@ -829,74 +814,14 @@ function isSizeAvailable(
     // PHYSICAL
     // ====================================
 
-    const inventoryItem =
-        findInventoryItem(
-            currentProduct.id,
-            variant.id,
-            size.id
-        );
-
-
-    if (!inventoryItem) {
-        return false;
-    }
-
-
-    const stock =
-        Number(
-            inventoryItem.stock
-        );
-
-
+    // Para productos físicos, Customer solo
+    // consulta el estado público del producto.
+    // El stock real permanece protegido en
+    // la colección inventory.
     return (
-        Number.isFinite(stock) &&
-        stock > 0
-    );
-
-}
-
-
-// ========================================
-// FIND INVENTORY ITEM
-// ========================================
-
-function findInventoryItem(
-    productId,
-    variantId,
-    sizeId
-) {
-
-    return (
-        currentInventory.find(
-            item =>
-
-                String(
-                    item?.productId
-                ) ===
-                String(
-                    productId
-                )
-
-                &&
-
-                String(
-                    item?.variantId
-                ) ===
-                String(
-                    variantId
-                )
-
-                &&
-
-                String(
-                    item?.sizeId
-                ) ===
-                String(
-                    sizeId
-                )
-        )
-
-        || null
+        variant.active !== false &&
+        size.active !== false &&
+        size.available === true
     );
 
 }
