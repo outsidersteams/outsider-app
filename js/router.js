@@ -51,6 +51,10 @@ import {
     initCustomerShop
 } from "./customer/shop.js";
 
+import {
+    CustomerProduct,
+    initCustomerProduct
+} from "./customer/product.js";
 
 // ========================================
 // ROUTES
@@ -68,7 +72,8 @@ const routes = {
     "/shop":
         CustomerShop,
 
-
+"/product":
+    CustomerProduct,
     // ====================================
     // ENTERPRISE
     // ====================================
@@ -93,6 +98,8 @@ const routes = {
 
     "/enterprise/customers":
         EnterpriseCustomers,
+    "/product":
+    CustomerProduct,
 
 };
 
@@ -397,6 +404,17 @@ export async function router() {
         await initCustomerShop();
 
     }
+    // ========================================
+// CUSTOMER PRODUCT INIT
+// ========================================
+
+if (
+    path === "/product"
+) {
+
+    await initCustomerProduct();
+
+}
 
 }
 

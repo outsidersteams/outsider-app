@@ -261,7 +261,8 @@ function initCategories() {
 
 function getFilteredProducts() {
 
-    let products = shopProducts;
+    let products =
+        shopProducts;
 
 
     // ----------------------------------------
@@ -439,6 +440,14 @@ function initSearch() {
 
     const closeSearch = () => {
 
+        /*
+         * El foco debe salir del buscador
+         * antes de ocultarlo con aria-hidden.
+         */
+
+        searchButton.focus();
+
+
         search.classList.remove(
             "is-open"
         );
@@ -561,10 +570,32 @@ function initMenu() {
             "customer-menu-open"
         );
 
+
+        /*
+         * Una vez abierto el menú,
+         * el foco pasa al botón cerrar.
+         */
+
+        requestAnimationFrame(() => {
+
+            closeButton.focus();
+
+        });
+
     };
 
 
     const closeMenu = () => {
+
+        /*
+         * Primero devolvemos el foco
+         * al botón que abrió el menú.
+         *
+         * Después ocultamos el menú.
+         */
+
+        menuButton.focus();
+
 
         menu.classList.remove(
             "is-open"
@@ -593,6 +624,21 @@ function initMenu() {
     );
 
 
+    menu.addEventListener(
+        "click",
+        event => {
+
+            const link =
+                event.target.closest("a");
+
+            if (!link) return;
+
+            closeMenu();
+
+        }
+    );
+
+
     menuButton.addEventListener(
         "click",
         openMenu
@@ -610,7 +656,10 @@ function initMenu() {
         event => {
 
             if (
-                event.key === "Escape"
+                event.key === "Escape" &&
+                menu.classList.contains(
+                    "is-open"
+                )
             ) {
 
                 closeMenu();
@@ -619,17 +668,6 @@ function initMenu() {
 
         }
     );
-
-
-    menu.querySelectorAll("a")
-        .forEach(link => {
-
-            link.addEventListener(
-                "click",
-                closeMenu
-            );
-
-        });
 
 }
 
