@@ -19,12 +19,6 @@ import {
 // ========================================
 // GET CURRENT ENTERPRISE USER PROFILE
 // ========================================
-//
-// Esta función se mantiene para Enterprise.
-//
-// users/{uid} continúa siendo exclusivamente
-// para employee / manager / admin.
-// ========================================
 
 export async function getCurrentUserProfile() {
 
@@ -91,13 +85,97 @@ export async function getCurrentCustomer() {
     }
 
 
+    // ========================================
+    // 1. BUSCAR CUSTOMER POR AUTH UID
+    // ========================================
+
     const customer =
         await getCustomerByAuthUid(
             user.uid
         );
 
 
-    return customer;
+    if (customer) {
+
+        return customer;
+
+    }
+
+
+    // ========================================
+    // 2. FALLBACK SEGURO POR EMAIL
+    // ========================================
+    //
+    // Esto cubre Customers creados previamente
+    // desde Enterprise que todavía no tenían
+    // authUid cuando crearon su cuenta Web.
+    // ========================================
+
+    const email =
+        String(
+            user.email || ""
+        )
+            .trim()
+            .toLowerCase();
+
+
+    if (!email) {
+
+        return null;
+
+    }
+
+
+    const existingEmailCustomer =
+        await getCustomerByEmail(
+            email
+        );
+
+
+    if (!existingEmailCustomer) {
+
+        return null;
+
+    }
+
+
+    // ========================================
+    // CUSTOMER VINCULADO A OTRA CUENTA
+    // ========================================
+
+    if (
+        existingEmailCustomer.authUid &&
+        existingEmailCustomer.authUid !== user.uid
+    ) {
+
+        console.warn(
+            "El Customer ya está vinculado a otra cuenta:",
+            existingEmailCustomer.id
+        );
+
+        return null;
+
+    }
+
+
+    // ========================================
+    // VINCULAR CUSTOMER EXISTENTE
+    // ========================================
+
+    const linkedCustomer =
+        await linkCustomerAuthUid(
+            existingEmailCustomer.id,
+            user.uid
+        );
+
+
+    console.log(
+        "✓ Customer existente vinculado desde getCurrentCustomer:",
+        linkedCustomer.id
+    );
+
+
+    return linkedCustomer;
 
 }
 
@@ -108,13 +186,11 @@ export async function getCurrentCustomer() {
 //
 // Firebase Authentication
 //          ↓
-// users/{uid} ?
-//          ↓
 // Enterprise → bloquear
 //          ↓
-// customers.authUid
+// authUid
 //          ↓
-// customers.email
+// email
 //          ↓
 // vincular / crear
 // ========================================
