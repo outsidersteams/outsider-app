@@ -10774,5 +10774,821 @@ body.customer-menu-open {
     font-size: 11px;
   }
 }
+.customer-account {
+  min-height: 100dvh;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: #f7f7f5;
+  color: #111111;
+}
+.customer-account__container {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.customer-account__header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+.customer-account__eyebrow {
+  margin: 0 0 4px;
+  color: #6b7280;
+  font-family: "Poppins", sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.customer-account__title {
+  width: min(190px, 52vw);
+  height: auto;
+  margin: 0 auto;
+  font-size: 0;
+  line-height: 0;
+}
+.customer-account__title::before {
+  content: "";
+  display: block;
+  width: 100%;
+  aspect-ratio: 3.35/1;
+  background-image: url("/assets/outsider-logo-black.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.customer-account__content {
+  width: 100%;
+}
+.customer-account__content > p {
+  margin: 0;
+  padding: 24px;
+  color: #6b7280;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  text-align: center;
+}
+.customer-account__auth {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 24px 32px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.045);
+}
+.customer-account__auth-title {
+  margin: 0 0 4px;
+  color: #000000;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 23px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+.customer-account__auth-description {
+  margin: 0 0 24px;
+  color: #6b7280;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.customer-account__google-button,
+.customer-account #customer-google-login,
+.customer-account #customer-google-register {
+  display: none !important;
+}
+.customer-account__separator {
+  display: none !important;
+}
+.customer-account__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.customer-account__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.customer-account__label {
+  color: #111111;
+  font-family: "Poppins", sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.customer-account__input {
+  width: 100%;
+  min-height: 46px;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  background: #ffffff;
+  color: #111111;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  outline: none;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+.customer-account__input::placeholder {
+  color: #6b7280;
+  opacity: 0.65;
+}
+.customer-account__input:hover {
+  border-color: rgb(80.7604433078%, 82.2404092072%, 85.200341006%);
+}
+.customer-account__input:focus {
+  border-color: #000000;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+.customer-account__input:disabled {
+  background: #f7f7f5;
+  cursor: not-allowed;
+}
+.customer-account__submit {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 0;
+  padding: 12px 24px;
+  background: #000000;
+  color: #ffffff;
+  border: 1px solid #000000;
+  border-radius: 8px;
+  font-family: "Poppins", sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 180ms ease, transform 180ms ease, opacity 180ms ease;
+}
+.customer-account__submit:hover {
+  background: #111111;
+  transform: translateY(-1px);
+}
+.customer-account__submit:active {
+  transform: translateY(0);
+}
+.customer-account__submit:disabled {
+  opacity: 0.55;
+  cursor: wait;
+  transform: none;
+}
+.customer-account__error {
+  margin: 0;
+  padding: 8px 16px;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  color: #ef4444;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.customer-account__error[hidden] {
+  display: none;
+}
+.customer-account__register {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+}
+.customer-account__register p {
+  margin: 0;
+  color: #6b7280;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 12px;
+}
+.customer-account__link {
+  padding: 0;
+  background: transparent;
+  color: #111111;
+  border: 0;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.customer-account__link:hover {
+  opacity: 0.55;
+}
+.customer-account__profile {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 24px 32px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.045);
+}
+.customer-account__profile-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.customer-account__avatar {
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  object-fit: cover;
+  border-radius: 50%;
+  background: #f7f7f5;
+  color: #111111;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 19px;
+  font-weight: 600;
+}
+.customer-account__avatar--placeholder {
+  border: 1px solid #e5e7eb;
+}
+.customer-account__profile-name {
+  margin: 0 0 4px;
+  color: #000000;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.customer-account__profile-email {
+  margin: 0;
+  color: #6b7280;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.customer-account__profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 16px;
+}
+.customer-account__logout {
+  min-height: 40px;
+  padding: 9px 16px;
+  background: transparent;
+  color: #111111;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-family: "Poppins", sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+.customer-account__logout:hover {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+.customer-account__logout:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.customer-account__submit:focus-visible, .customer-account__link:focus-visible, .customer-account__logout:focus-visible, .customer-account__input:focus-visible {
+  outline: 2px solid #000000;
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .customer-account {
+    min-height: 100dvh;
+    padding: 24px 16px;
+  }
+  .customer-account__container {
+    max-width: 480px;
+  }
+  .customer-account__header {
+    margin-bottom: 16px;
+  }
+  .customer-account__title {
+    width: min(170px, 58vw);
+  }
+  .customer-account__auth, .customer-account__profile {
+    padding: 24px;
+  }
+  .customer-account__auth-title {
+    font-size: 21px;
+  }
+  .customer-account__auth-description {
+    margin-bottom: 16px;
+  }
+  .customer-account__form {
+    gap: 16px;
+  }
+  .customer-account__profile-header {
+    align-items: flex-start;
+  }
+  .customer-account__profile-actions {
+    justify-content: stretch;
+  }
+  .customer-account__logout {
+    width: 100%;
+  }
+  .customer-account__register {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .customer-account__input, .customer-account__submit, .customer-account__link, .customer-account__logout {
+    transition: none;
+  }
+}
+.customer-checkout {
+  min-height: 100vh;
+  background: #f7f7f5;
+  color: #111111;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.customer-checkout__header {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.customer-checkout__header-inner {
+  width: min(1180px, 100% - 48px);
+  min-height: 92px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.customer-checkout__back {
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #111111;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.customer-checkout__back:hover {
+  background: #f7f7f5;
+  border-color: #111111;
+  transform: translateX(-2px);
+}
+
+.customer-checkout__back:focus-visible {
+  outline: 2px solid #000000;
+  outline-offset: 3px;
+}
+
+.customer-checkout__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.customer-checkout__eyebrow {
+  font-family: "Sedgwick Ave Display", cursive;
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  color: black;
+}
+
+.customer-checkout__title {
+  margin: 0;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 30px;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.customer-checkout__content {
+  width: min(1180px, 100% - 48px);
+  margin: 0 auto;
+  padding: 48px 0;
+}
+
+.customer-checkout__loading {
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.customer-checkout__loading {
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.customer-checkout__loading[hidden] {
+  display: none !important;
+}
+
+.customer-checkout__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(300px, 0.9fr);
+  align-items: start;
+  gap: 32px;
+}
+
+.customer-checkout__customer,
+.customer-checkout__summary {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 24px;
+}
+
+.customer-checkout__customer {
+  padding: 32px;
+}
+
+.customer-checkout__summary {
+  position: sticky;
+  top: 24px;
+  padding: 24px;
+}
+
+.customer-checkout__section-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.customer-checkout__section-number {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #000000;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.customer-checkout__section-title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.customer-checkout__section-description {
+  margin: 5px 0 0;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.customer-checkout__form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.customer-checkout__field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.customer-checkout__label {
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.customer-checkout__label span {
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.customer-checkout__input {
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
+  padding: 0 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111111;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.customer-checkout__input::placeholder {
+  color: #9ca3af;
+}
+
+.customer-checkout__input:hover {
+  border-color: #d1d5db;
+}
+
+.customer-checkout__input:focus {
+  border-color: #000000;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+.customer-checkout__input[readonly] {
+  background: #FAFAFA;
+  color: #6b7280;
+  cursor: default;
+}
+
+.customer-checkout__hint {
+  color: #6b7280;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.customer-checkout__address {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-top: 8px;
+}
+
+.customer-checkout__address-title {
+  margin-bottom: -4px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.customer-checkout__error {
+  margin: 0;
+  padding: 11px 13px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.06);
+  color: #ef4444;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.customer-checkout__submit {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 8px;
+  background: #000000;
+  color: #ffffff;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.customer-checkout__submit:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.customer-checkout__submit:focus-visible {
+  outline: 2px solid #000000;
+  outline-offset: 3px;
+}
+
+.customer-checkout__submit:disabled {
+  opacity: 0.55;
+  cursor: wait;
+  transform: none;
+}
+
+.customer-checkout__items {
+  display: flex;
+  flex-direction: column;
+}
+
+.customer-checkout__item {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.customer-checkout__item:first-child {
+  padding-top: 0;
+}
+
+.customer-checkout__item:last-child {
+  border-bottom: 0;
+}
+
+.customer-checkout__item-media {
+  width: 64px;
+  height: 76px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #f7f7f5;
+}
+
+.customer-checkout__item-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.customer-checkout__item-image--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.customer-checkout__item-info {
+  min-width: 0;
+}
+
+.customer-checkout__item-name {
+  margin: 0;
+  overflow: hidden;
+  color: #111111;
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.customer-checkout__item-options {
+  margin-top: 4px;
+  color: #6b7280;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.customer-checkout__item-meta {
+  margin-top: 5px;
+  color: #6b7280;
+  font-size: 11px;
+}
+
+.customer-checkout__item-price {
+  align-self: start;
+  padding-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.customer-checkout__totals {
+  padding-top: 16px;
+}
+
+.customer-checkout__total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.customer-checkout__total-row + .customer-checkout__total-row {
+  margin-top: 8px;
+}
+
+.customer-checkout__total-row--muted {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.customer-checkout__total-divider {
+  height: 1px;
+  margin: 24px 0;
+  background: #e5e7eb;
+}
+
+.customer-checkout__total-row--grand {
+  font-size: 17px;
+}
+
+.customer-checkout__total-row--grand strong {
+  font-size: 19px;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .customer-checkout__body {
+    grid-template-columns: 1fr;
+  }
+  .customer-checkout__summary {
+    position: static;
+    order: 2;
+  }
+  .customer-checkout__customer {
+    order: 1;
+  }
+}
+@media (max-width: 640px) {
+  .customer-checkout__header-inner {
+    width: calc(100% - 32px);
+    min-height: 76px;
+    gap: 16px;
+  }
+  .customer-checkout__content {
+    width: calc(100% - 32px);
+    padding: 32px 0;
+  }
+  .customer-checkout__title {
+    font-size: 24px;
+  }
+  .customer-checkout__customer,
+  .customer-checkout__summary {
+    border-radius: 14px;
+  }
+  .customer-checkout__customer {
+    padding: 24px;
+  }
+  .customer-checkout__summary {
+    padding: 16px;
+  }
+  .customer-checkout__section-header {
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .customer-checkout__section-number {
+    width: 34px;
+    height: 34px;
+    font-size: 11px;
+  }
+  .customer-checkout__section-title {
+    font-size: 18px;
+  }
+  .customer-checkout__item {
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 8px;
+  }
+  .customer-checkout__item-media {
+    width: 56px;
+    height: 66px;
+  }
+  .customer-checkout__item-price {
+    grid-column: 2;
+    padding-top: 0;
+    justify-self: start;
+  }
+}
+@media (max-width: 420px) {
+  .customer-checkout__header-inner,
+  .customer-checkout__content {
+    width: calc(100% - 24px);
+  }
+  .customer-checkout__customer {
+    padding: 16px;
+  }
+  .customer-checkout__title {
+    font-size: 22px;
+  }
+  .customer-checkout__input {
+    min-height: 46px;
+    font-size: 13px;
+  }
+  .customer-checkout__submit {
+    min-height: 50px;
+  }
+}
 
 /*# sourceMappingURL=main.css.map */

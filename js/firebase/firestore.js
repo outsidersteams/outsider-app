@@ -4,6 +4,7 @@ import {
     getDocs,
     doc,
     getDoc,
+    setDoc,
     updateDoc,
     writeBatch,
     serverTimestamp,
@@ -81,7 +82,6 @@ export async function getUserProfile(uid) {
     };
 
 }
-
 export async function getProducts() {
 
     const productsRef =
@@ -445,6 +445,7 @@ export async function updateCustomer(
 }
 
 
+
 // ========================================
 // CUSTOMER SOURCE LABEL
 // ========================================
@@ -484,6 +485,411 @@ export async function getCustomers() {
         id: doc.id,
         ...doc.data()
     }));
+
+}
+
+
+// ========================================
+// CUSTOMER ACCOUNT AUTHENTICATION
+// ========================================
+
+export async function getCustomerByAuthUid(
+    authUid
+) {
+
+    if (!authUid) {
+
+        throw new Error(
+            "El authUid es obligatorio."
+        );
+
+    }
+
+    const customersRef =
+        collection(
+            db,
+            "customers"
+        );
+
+    const customerQuery =
+        query(
+            customersRef,
+            where(
+                "authUid",
+                "==",
+                authUid
+            )
+        );
+
+    const snapshot =
+        await getDocs(
+            customerQuery
+        );
+
+    if (snapshot.empty) {
+
+        return null;
+
+    }
+
+    const customerDocument =
+        snapshot.docs[0];
+
+    return {
+        id:
+            customerDocument.id,
+
+        ...customerDocument.data()
+    };
+
+}
+
+
+export async function getCustomerByEmail(
+    email
+) {
+
+    const normalizedEmail =
+        String(
+            email || ""
+        )
+            .trim()
+            .toLowerCase();
+
+    if (!normalizedEmail) {
+
+        return null;
+
+    }
+
+    const currentUser =
+        auth.currentUser;
+
+    if (!currentUser) {
+
+        throw new Error(
+            "No hay una cuenta autenticada."
+        );
+
+    }
+
+    const authenticatedEmail =
+        String(
+            currentUser.email || ""
+        )
+            .trim()
+            .toLowerCase();
+
+    // Customer Web solo puede consultar su propio email.
+    // Enterprise conserva su acceso mediante las Rules.
+    if (
+        normalizedEmail !==
+        authenticatedEmail
+    ) {
+
+        const enterpriseUser =
+            await getEnterpriseUserByUid(
+                currentUser.uid
+            );
+
+        const isEnterpriseAccount =
+            enterpriseUser &&
+            enterpriseUser.active === true &&
+            [
+                "employee",
+                "manager",
+                "admin"
+            ].includes(
+                enterpriseUser.role
+            );
+
+        if (!isEnterpriseAccount) {
+
+            throw new Error(
+                "No tienes permiso para consultar este Customer."
+            );
+
+        }
+
+    }
+
+    const customersRef =
+        collection(
+            db,
+            "customers"
+        );
+
+    const customerQuery =
+        query(
+            customersRef,
+            where(
+                "email",
+                "==",
+                normalizedEmail
+            )
+        );
+
+    const snapshot =
+        await getDocs(
+            customerQuery
+        );
+
+    if (snapshot.empty) {
+
+        return null;
+
+    }
+
+    const customerDocument =
+        snapshot.docs[0];
+
+    return {
+        id:
+            customerDocument.id,
+
+        ...customerDocument.data()
+    };
+
+}
+
+
+export async function linkCustomerAuthUid(
+    customerId,
+    authUid
+) {
+
+    if (!customerId) {
+
+        throw new Error(
+            "El customerId es obligatorio."
+        );
+
+    }
+
+    if (!authUid) {
+
+        throw new Error(
+            "El authUid es obligatorio."
+        );
+
+    }
+
+    const customerRef =
+        doc(
+            db,
+            "customers",
+            customerId
+        );
+
+    const snapshot =
+        await getDoc(
+            customerRef
+        );
+
+    if (!snapshot.exists()) {
+
+        throw new Error(
+            "El cliente no existe."
+        );
+
+    }
+
+    const customer =
+        snapshot.data();
+
+    if (
+        customer.authUid &&
+        customer.authUid !== authUid
+    ) {
+
+        throw new Error(
+            "Este cliente ya está vinculado a otra cuenta."
+        );
+
+    }
+
+    await updateDoc(
+        customerRef,
+        {
+            authUid,
+
+            updatedAt:
+                serverTimestamp()
+        }
+    );
+
+    console.log(
+        "✓ Cuenta Customer vinculada:",
+        {
+            customerId,
+            authUid
+        }
+    );
+
+    return {
+
+        id:
+            customerId,
+
+        ...customer,
+
+        authUid
+
+    };
+
+}
+
+
+export async function createCustomerAccount(
+    profileData = {},
+    authUid
+) {
+
+    if (!authUid) {
+
+        throw new Error(
+            "El authUid es obligatorio."
+        );
+
+    }
+
+    const name =
+        String(
+            profileData.name || ""
+        ).trim();
+
+    const email =
+        String(
+            profileData.email || ""
+        )
+            .trim()
+            .toLowerCase();
+
+    if (!name) {
+
+        throw new Error(
+            "El nombre del cliente es obligatorio."
+        );
+
+    }
+
+    if (!email) {
+
+        throw new Error(
+            "El correo del cliente es obligatorio."
+        );
+
+    }
+
+    const existingCustomer =
+        await getCustomerByEmail(
+            email
+        );
+
+    if (existingCustomer) {
+
+        if (
+            existingCustomer.authUid &&
+            existingCustomer.authUid !== authUid
+        ) {
+
+            throw new Error(
+                "Ya existe un Customer con este correo vinculado a otra cuenta."
+            );
+
+        }
+
+        return linkCustomerAuthUid(
+            existingCustomer.id,
+            authUid
+        );
+
+    }
+
+    const customerRef =
+        await addDoc(
+            collection(
+                db,
+                "customers"
+            ),
+            {
+
+                authUid,
+
+                name,
+
+                phone:
+                    String(
+                        profileData.phone || ""
+                    ).trim(),
+
+                email,
+
+                address:
+                    profileData.address &&
+                    typeof profileData.address === "object"
+                        ? profileData.address
+                        : {},
+
+                notes:
+                    String(
+                        profileData.notes || ""
+                    ).trim(),
+
+                acquisitionSource:
+                    "web",
+
+                active:
+                    true,
+
+                createdAt:
+                    serverTimestamp(),
+
+                updatedAt:
+                    serverTimestamp()
+
+            }
+        );
+
+    console.log(
+        "✓ Customer Account creado:",
+        customerRef.id
+    );
+
+    return {
+
+        id:
+            customerRef.id,
+
+        authUid,
+
+        name,
+
+        phone:
+            String(
+                profileData.phone || ""
+            ).trim(),
+
+        email,
+
+        address:
+            profileData.address &&
+            typeof profileData.address === "object"
+                ? profileData.address
+                : {},
+
+        notes:
+            String(
+                profileData.notes || ""
+            ).trim(),
+
+        acquisitionSource:
+            "web",
+
+        active:
+            true
+
+    };
 
 }
 
@@ -2924,5 +3330,49 @@ export async function refundSaleFromOrder(
         );
 
     }
+
+}
+// ========================================
+// CHECK ENTERPRISE USER
+// ========================================
+
+export async function getEnterpriseUserByUid(
+    uid
+) {
+
+    if (!uid) {
+
+        return null;
+
+    }
+
+
+    const userRef =
+        doc(
+            db,
+            "users",
+            uid
+        );
+
+
+    const snapshot =
+        await getDoc(
+            userRef
+        );
+
+
+    if (!snapshot.exists()) {
+
+        return null;
+
+    }
+
+
+    return {
+        id:
+            snapshot.id,
+
+        ...snapshot.data()
+    };
 
 }

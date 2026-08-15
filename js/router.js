@@ -59,7 +59,14 @@ import {
     CustomerProduct,
     initCustomerProduct
 } from "./customer/product.js";
-
+import {
+    CustomerAccount,
+    initCustomerAccount
+} from "./customer/account.js";
+import {
+    CustomerCheckout,
+    initCustomerCheckout
+} from "./customer/checkout.js";
 // ========================================
 // ROUTES
 // ========================================
@@ -76,8 +83,16 @@ const routes = {
     "/shop":
         CustomerShop,
 
-"/product":
-    CustomerProduct,
+    "/product":
+        CustomerProduct,
+
+    "/cart":
+        CustomerCart,
+
+    "/account":
+        CustomerAccount,
+
+
     // ====================================
     // ENTERPRISE
     // ====================================
@@ -102,10 +117,10 @@ const routes = {
 
     "/enterprise/customers":
         EnterpriseCustomers,
-    "/product":
-    CustomerProduct,
-    "/cart":
-    CustomerCart,
+
+    "/checkout":
+    CustomerCheckout,
+
 };
 
 
@@ -429,6 +444,22 @@ if (
 ) {
 
     await initCustomerProduct();
+
+}
+// ========================================
+// CUSTOMER ACCOUNT INIT
+// ========================================
+
+if (
+    path === "/account"
+) {
+
+    initCustomerAccount();
+
+}
+if (path === "/checkout") {
+
+    await initCustomerCheckout();
 
 }
 
