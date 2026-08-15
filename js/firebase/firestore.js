@@ -447,6 +447,169 @@ export async function updateCustomer(
 
 
 // ========================================
+// UPDATE CUSTOMER CHECKOUT DATA
+// ========================================
+//
+// Actualiza únicamente los datos que el Customer
+// puede completar/modificar durante Checkout.
+//
+// NO modifica:
+// - authUid
+// - email
+// - acquisitionSource
+// - active
+// - notes
+// - createdAt
+//
+// Esto permite que un Customer creado desde
+// Enterprise pueda completar sus datos de entrega
+// desde Web sin alterar su información administrativa.
+// ========================================
+
+export async function updateCustomerCheckoutData(
+    customerId,
+    customerData = {}
+) {
+
+    if (!customerId) {
+
+        throw new Error(
+            "El customerId es obligatorio."
+        );
+
+    }
+
+    const customerRef =
+        doc(
+            db,
+            "customers",
+            customerId
+        );
+
+    const snapshot =
+        await getDoc(
+            customerRef
+        );
+
+    if (!snapshot.exists()) {
+
+        throw new Error(
+            "El cliente no existe."
+        );
+
+    }
+
+    const currentCustomer =
+        snapshot.data();
+
+    const name =
+        String(
+            customerData.name ??
+            currentCustomer.name ??
+            ""
+        ).trim();
+
+    const phone =
+        String(
+            customerData.phone ??
+            currentCustomer.phone ??
+            ""
+        ).trim();
+
+    if (!name) {
+
+        throw new Error(
+            "El nombre del cliente es obligatorio."
+        );
+
+    }
+
+    if (!phone) {
+
+        throw new Error(
+            "El teléfono del cliente es obligatorio."
+        );
+
+    }
+
+    const address =
+        customerData.address &&
+        typeof customerData.address === "object"
+            ? {
+                line1:
+                    String(
+                        customerData.address.line1 ??
+                        ""
+                    ).trim(),
+
+                line2:
+                    String(
+                        customerData.address.line2 ??
+                        ""
+                    ).trim(),
+
+                city:
+                    String(
+                        customerData.address.city ??
+                        ""
+                    ).trim(),
+
+                department:
+                    String(
+                        customerData.address.department ??
+                        ""
+                    ).trim(),
+
+                country:
+                    String(
+                        customerData.address.country ??
+                        ""
+                    ).trim(),
+
+                postalCode:
+                    String(
+                        customerData.address.postalCode ??
+                        ""
+                    ).trim()
+            }
+            : (
+                currentCustomer.address &&
+                typeof currentCustomer.address === "object"
+                    ? currentCustomer.address
+                    : {}
+            );
+
+    await updateDoc(
+        customerRef,
+        {
+            name,
+            phone,
+            address,
+            updatedAt:
+                serverTimestamp()
+        }
+    );
+
+    console.log(
+        "✓ Datos de Checkout actualizados:",
+        customerId
+    );
+
+    return {
+        id:
+            customerId,
+
+        ...currentCustomer,
+
+        name,
+        phone,
+        address
+    };
+
+}
+
+
+// ========================================
 // CUSTOMER SOURCE LABEL
 // ========================================
 
