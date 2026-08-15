@@ -25,16 +25,22 @@ export async function getCurrentUserProfile() {
     const user =
         getCurrentAuthUser();
 
+
     if (!user) {
+
         return null;
+
     }
+
 
     const profile =
         await getUserProfile(
             user.uid
         );
 
+
     return profile;
+
 }
 
 
@@ -47,14 +53,19 @@ export async function getCurrentCustomer() {
     const user =
         getCurrentAuthUser();
 
+
     if (!user) {
+
         return null;
+
     }
+
 
     const enterpriseUser =
         await getEnterpriseUserByUid(
             user.uid
         );
+
 
     if (enterpriseUser) {
 
@@ -70,6 +81,7 @@ export async function getCurrentCustomer() {
         );
 
         return null;
+
     }
 
 
@@ -82,8 +94,11 @@ export async function getCurrentCustomer() {
             user.uid
         );
 
+
     if (customer) {
+
         return customer;
+
     }
 
 
@@ -91,7 +106,7 @@ export async function getCurrentCustomer() {
     // 2. FALLBACK SEGURO POR EMAIL
     // ========================================
     //
-    // Cubre Customers creados previamente
+    // Esto cubre Customers creados previamente
     // desde Enterprise que todavía no tenían
     // authUid cuando crearon su cuenta Web.
     // ========================================
@@ -103,17 +118,24 @@ export async function getCurrentCustomer() {
             .trim()
             .toLowerCase();
 
+
     if (!email) {
+
         return null;
+
     }
+
 
     const existingEmailCustomer =
         await getCustomerByEmail(
             email
         );
 
+
     if (!existingEmailCustomer) {
+
         return null;
+
     }
 
 
@@ -132,6 +154,7 @@ export async function getCurrentCustomer() {
         );
 
         return null;
+
     }
 
 
@@ -145,12 +168,15 @@ export async function getCurrentCustomer() {
             user.uid
         );
 
+
     console.log(
         "✓ Customer existente vinculado desde getCurrentCustomer:",
         linkedCustomer.id
     );
 
+
     return linkedCustomer;
+
 }
 
 
@@ -192,6 +218,7 @@ export async function ensureCustomerAccount(
             user.uid
         );
 
+
     if (enterpriseUser) {
 
         console.warn(
@@ -205,9 +232,11 @@ export async function ensureCustomerAccount(
             }
         );
 
+
         throw new Error(
             "Esta cuenta pertenece al área Enterprise y no puede utilizarse como cuenta Customer."
         );
+
     }
 
 
@@ -220,6 +249,7 @@ export async function ensureCustomerAccount(
             user.uid
         );
 
+
     if (existingAuthCustomer) {
 
         console.log(
@@ -227,7 +257,9 @@ export async function ensureCustomerAccount(
             existingAuthCustomer.id
         );
 
+
         return existingAuthCustomer;
+
     }
 
 
@@ -242,6 +274,7 @@ export async function ensureCustomerAccount(
             .trim()
             .toLowerCase();
 
+
     if (!email) {
 
         throw new Error(
@@ -250,10 +283,12 @@ export async function ensureCustomerAccount(
 
     }
 
+
     const existingEmailCustomer =
         await getCustomerByEmail(
             email
         );
+
 
     if (existingEmailCustomer) {
 
@@ -289,12 +324,15 @@ export async function ensureCustomerAccount(
                 user.uid
             );
 
+
         console.log(
             "✓ Customer existente vinculado:",
             linkedCustomer.id
         );
 
+
         return linkedCustomer;
+
     }
 
 
@@ -330,10 +368,13 @@ export async function ensureCustomerAccount(
             user.uid
         );
 
+
     console.log(
         "✓ Nuevo Customer Account creado:",
         customer.id
     );
 
+
     return customer;
+
 }

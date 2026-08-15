@@ -7,9 +7,12 @@ import {
 } from "../firebase/auth.js";
 
 import {
-    getCustomerByAuthUid,
     updateCustomerCheckoutData
 } from "../firebase/firestore.js";
+
+import {
+    getCurrentCustomer
+} from "../firebase/userService.js";
 
 
 // ========================================
@@ -586,9 +589,7 @@ export async function initCustomerCheckout() {
     try {
 
         const customer =
-            await getCustomerByAuthUid(
-                user.uid
-            );
+            await getCurrentCustomer();
 
 
         if (!customer) {

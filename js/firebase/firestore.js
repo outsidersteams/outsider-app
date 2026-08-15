@@ -824,19 +824,30 @@ export async function linkCustomerAuthUid(
 ) {
 
     if (!customerId) {
-
         throw new Error(
             "El customerId es obligatorio."
         );
-
     }
 
     if (!authUid) {
-
         throw new Error(
             "El authUid es obligatorio."
         );
+    }
 
+    const currentUser =
+        auth.currentUser;
+
+    if (!currentUser) {
+        throw new Error(
+            "No hay una cuenta autenticada."
+        );
+    }
+
+    if (currentUser.uid !== authUid) {
+        throw new Error(
+            "El authUid no corresponde a la cuenta autenticada."
+        );
     }
 
     const customerRef =
@@ -852,11 +863,9 @@ export async function linkCustomerAuthUid(
         );
 
     if (!snapshot.exists()) {
-
         throw new Error(
             "El cliente no existe."
         );
-
     }
 
     const customer =
@@ -866,18 +875,39 @@ export async function linkCustomerAuthUid(
         customer.authUid &&
         customer.authUid !== authUid
     ) {
-
         throw new Error(
             "Este cliente ya está vinculado a otra cuenta."
         );
+    }
 
+    const customerEmail =
+        String(
+            customer.email || ""
+        )
+            .trim()
+            .toLowerCase();
+
+    const authenticatedEmail =
+        String(
+            currentUser.email || ""
+        )
+            .trim()
+            .toLowerCase();
+
+    if (
+        !customerEmail ||
+        !authenticatedEmail ||
+        customerEmail !== authenticatedEmail
+    ) {
+        throw new Error(
+            "El correo del Customer no coincide con la cuenta autenticada."
+        );
     }
 
     await updateDoc(
         customerRef,
         {
             authUid,
-
             updatedAt:
                 serverTimestamp()
         }
@@ -887,21 +917,20 @@ export async function linkCustomerAuthUid(
         "✓ Cuenta Customer vinculada:",
         {
             customerId,
-            authUid
+            authUid,
+            email:
+                authenticatedEmail
         }
     );
 
     return {
-
         id:
             customerId,
 
         ...customer,
 
         authUid
-
     };
-
 }
 
 
