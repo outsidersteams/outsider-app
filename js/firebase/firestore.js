@@ -245,7 +245,9 @@ function normalizeCustomerData(
     const email =
         String(
             customerData.email || ""
-        ).trim();
+        )
+            .trim()
+            .toLowerCase();
 
     const acquisitionSource =
         String(
