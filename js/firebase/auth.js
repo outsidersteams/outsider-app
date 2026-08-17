@@ -100,6 +100,121 @@ export function getCurrentAuthUser() {
 
 
 // ========================================
+// CURRENT USER — FIREBASE ID TOKEN
+// ========================================
+//
+// Devuelve el ID Token del usuario actualmente
+// autenticado.
+//
+// Este token será utilizado posteriormente
+// para autenticar solicitudes contra
+// outsider-api.
+//
+// Si no existe usuario autenticado,
+// devuelve null.
+// ========================================
+
+export async function getCurrentUserIdToken() {
+
+    const user =
+        auth.currentUser;
+
+
+    if (!user) {
+
+        return null;
+
+    }
+
+
+    return await user.getIdToken();
+
+}
+
+
+// ========================================
+// TEST — OUTSIDER API AUTHENTICATION
+// ========================================
+//
+// Esta función es únicamente para comprobar
+// la comunicación:
+//
+// SPA
+// ↓
+// Firebase Auth
+// ↓
+// ID Token
+// ↓
+// Cloudflare outsider-api
+// ↓
+// /auth-check
+//
+// No modifica Firestore.
+// No modifica Orders.
+// No modifica Inventory.
+// No modifica Payment.
+// ========================================
+
+export async function testOutsiderApiAuth() {
+
+    const idToken =
+        await getCurrentUserIdToken();
+
+
+    if (!idToken) {
+
+        throw new Error(
+            "No hay un usuario autenticado."
+        );
+
+    }
+
+
+    const response =
+        await fetch(
+            "https://outsider-api.outsidersteams.workers.dev/auth-check",
+            {
+                method: "GET",
+
+                headers: {
+                    "Authorization":
+                        `Bearer ${idToken}`
+                }
+            }
+        );
+
+
+    let data = null;
+
+
+    try {
+
+        data =
+            await response.json();
+
+    } catch {
+
+        data = null;
+
+    }
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            data?.error ||
+            `OUTSIDER API respondió HTTP ${response.status}.`
+        );
+
+    }
+
+
+    return data;
+
+}
+
+
+// ========================================
 // LOGOUT
 // ========================================
 

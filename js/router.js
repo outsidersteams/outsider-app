@@ -67,6 +67,10 @@ import {
     CustomerCheckout,
     initCustomerCheckout
 } from "./customer/checkout.js";
+import {
+    CustomerPayment,
+    initCustomerPayment
+} from "./customer/payment.js";
 // ========================================
 // ROUTES
 // ========================================
@@ -120,6 +124,7 @@ const routes = {
 
     "/checkout":
     CustomerCheckout,
+    "/payment": CustomerPayment
 
 };
 
@@ -461,6 +466,9 @@ if (path === "/checkout") {
 
     await initCustomerCheckout();
 
+}
+if (path === "/payment") {
+    initCustomerPayment();
 }
 
 }

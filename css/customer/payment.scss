@@ -1,0 +1,809 @@
+// ========================================
+// OUTSIDER — CUSTOMER PAYMENT
+// ========================================
+@use "../base/variables" as *;
+.customer-payment {
+    min-height: 100vh;
+    background: $color-surface;
+    color: $color-text;
+    font-family: $font-primary;
+}
+
+
+// ========================================
+// HEADER
+// ========================================
+
+.customer-payment__header {
+    background: $color-white;
+    border-bottom: 1px solid $border-color;
+}
+
+.customer-payment__header-inner {
+    width: min(1180px, calc(100% - 32px));
+    min-height: 88px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: $space-md;
+}
+
+.customer-payment__back {
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid $border-color;
+    border-radius: 50%;
+    background: $color-white;
+    color: $color-text;
+    cursor: pointer;
+    transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+
+    &:hover {
+        background: $color-surface-secondary;
+        border-color: #d1d5db;
+        transform: translateX(-2px);
+    }
+
+    &:focus-visible {
+        outline: 3px solid rgba(124, 58, 237, 0.18);
+        outline-offset: 2px;
+    }
+}
+
+.customer-payment__brand {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.customer-payment__eyebrow {
+    font-family: $font-poppins;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    color: $color-text-muted;
+}
+
+.customer-payment__title {
+    margin: 0;
+    font-family: $font-poppins;
+    font-size: 28px;
+    line-height: 1.15;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+}
+
+
+// ========================================
+// CONTENT
+// ========================================
+
+.customer-payment__content {
+    width: min(1180px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: $space-2xl 0 72px;
+}
+
+.customer-payment__body {
+    display: grid;
+    gap: $space-lg;
+}
+
+.customer-payment__loading {
+    min-height: 240px;
+    display: grid;
+    place-items: center;
+    color: $color-text-muted;
+    font-size: 14px;
+}
+
+.customer-payment__error {
+    margin-bottom: $space-lg;
+    padding: 14px 16px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: $radius-md;
+    background: #fff5f5;
+    color: $color-danger;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+
+// ========================================
+// SECTIONS
+// ========================================
+
+.customer-payment__customer,
+.customer-payment__discount,
+.customer-payment__method,
+.customer-payment__summary {
+    padding: $space-xl;
+    background: $color-white;
+    border: 1px solid $border-color;
+    border-radius: $radius-lg;
+}
+
+.customer-payment__section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: $space-lg;
+}
+
+.customer-payment__section-number {
+    flex: 0 0 auto;
+    min-width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: $color-black;
+    color: $color-white;
+    font-family: $font-poppins;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.customer-payment__section-title {
+    margin: 0;
+    font-family: $font-poppins;
+    font-size: 18px;
+    line-height: 1.3;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.customer-payment__section-description {
+    margin: 5px 0 0;
+    color: $color-text-muted;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+
+// ========================================
+// CUSTOMER
+// ========================================
+
+.customer-payment__customer-card {
+    padding: 18px;
+    border: 1px solid $border-color;
+    border-radius: $radius-md;
+    background: $color-surface-secondary;
+}
+
+.customer-payment__customer-name {
+    margin-bottom: 7px;
+    font-family: $font-poppins;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.customer-payment__customer-contact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    color: $color-text-muted;
+    font-size: 13px;
+}
+
+.customer-payment__customer-address {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid $border-color;
+    color: $color-text;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.customer-payment__edit-customer {
+    margin-top: 14px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: $color-text;
+    font-family: $font-poppins;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+
+    &:hover {
+        color: $color-purple;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $color-purple;
+        outline-offset: 4px;
+    }
+}
+
+
+// ========================================
+// DISCOUNT
+// ========================================
+
+.customer-payment__discount-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.customer-payment__discount-input {
+    min-width: 0;
+    flex: 1;
+    height: 48px;
+    padding: 0 14px;
+    border: 1px solid $border-color;
+    border-radius: $radius-sm;
+    background: $color-white;
+    color: $color-text;
+    font-family: $font-primary;
+    font-size: 14px;
+    transition: border-color 180ms ease, box-shadow 180ms ease;
+
+    &::placeholder {
+        color: #9ca3af;
+    }
+
+    &:focus {
+        border-color: $color-purple;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+    }
+}
+
+.customer-payment__discount-button {
+    min-width: 105px;
+    height: 48px;
+    padding: 0 18px;
+    border: 1px solid $color-black;
+    border-radius: $radius-sm;
+    background: $color-black;
+    color: $color-white;
+    font-family: $font-poppins;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: transform 180ms ease, opacity 180ms ease;
+
+    &:hover {
+        transform: translateY(-1px);
+        opacity: 0.9;
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+}
+
+.customer-payment__discount-message {
+    min-height: 18px;
+    margin: 9px 0 0;
+    color: $color-text-muted;
+    font-size: 12px;
+}
+
+
+// ========================================
+// PAYMENT METHOD
+// ========================================
+
+.customer-payment__options {
+    display: grid;
+}
+
+.customer-payment__option {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 14px;
+    padding: 18px;
+    border: 1px solid $border-color;
+    border-radius: $radius-md;
+    background: $color-white;
+    cursor: pointer;
+    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+
+    &:hover {
+        border-color: #d1d5db;
+        transform: translateY(-1px);
+    }
+
+    &--selected {
+        border-color: $color-black;
+        box-shadow: 0 0 0 1px $color-black;
+    }
+
+    input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    > i {
+        color: $color-text-muted;
+        font-size: 18px;
+    }
+}
+
+.customer-payment__option-radio {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    flex: 0 0 auto;
+    border: 1.5px solid #9ca3af;
+    border-radius: 50%;
+}
+
+.customer-payment__option--selected .customer-payment__option-radio {
+    border-color: $color-black;
+
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 4px;
+        border-radius: 50%;
+        background: $color-black;
+    }
+}
+
+.customer-payment__option-content {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.customer-payment__option-title {
+    font-family: $font-poppins;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.customer-payment__option-description {
+    color: $color-text-muted;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+// ========================================
+// ORDER SUMMARY
+// ========================================
+
+.customer-payment__items {
+    display: grid;
+    gap: 0;
+}
+
+.customer-payment__item {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid $border-color;
+
+    &:first-child {
+        padding-top: 0;
+    }
+
+    &:last-child {
+        border-bottom: 0;
+    }
+}
+
+.customer-payment__item-media {
+    width: 72px;
+    height: 88px;
+    overflow: hidden;
+    border-radius: $radius-sm;
+    background: $color-surface;
+}
+
+.customer-payment__item-image {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.customer-payment__item-image--empty {
+    display: grid;
+    place-items: center;
+    color: #9ca3af;
+    font-size: 18px;
+}
+
+.customer-payment__item-info {
+    min-width: 0;
+}
+
+.customer-payment__item-name {
+    margin: 0;
+    font-family: $font-poppins;
+    font-size: 14px;
+    line-height: 1.4;
+    font-weight: 600;
+}
+
+.customer-payment__item-options {
+    margin-top: 5px;
+    color: $color-text-muted;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.customer-payment__item-meta {
+    margin-top: 7px;
+    color: $color-text-muted;
+    font-size: 12px;
+}
+
+.customer-payment__item-price {
+    white-space: nowrap;
+    font-family: $font-poppins;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+
+// ========================================
+// TOTALS
+// ========================================
+
+.customer-payment__totals {
+    margin-top: 18px;
+    padding-top: 4px;
+}
+
+.customer-payment__total-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 7px 0;
+    color: $color-text-muted;
+    font-size: 13px;
+
+    strong {
+        color: $color-text;
+        font-weight: 500;
+    }
+}
+
+.customer-payment__total-divider {
+    height: 1px;
+    margin: 14px 0;
+    background: $border-color;
+}
+
+.customer-payment__total-row--grand {
+    padding-top: 2px;
+    color: $color-text;
+
+    span {
+        font-family: $font-poppins;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    strong {
+        font-family: $font-poppins;
+        font-size: 24px;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+    }
+}
+
+
+// ========================================
+// CONFIRMATION
+// ========================================
+
+.customer-payment__confirmation {
+    padding: 20px;
+    border-radius: $radius-lg;
+    background: $color-black;
+    color: $color-white;
+}
+
+.customer-payment__confirmation-text {
+    max-width: 720px;
+    margin: 0 0 18px;
+    color: #d1d5db;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.customer-payment__submit {
+    width: 100%;
+    min-height: 56px;
+    border: 1px solid $color-white;
+    border-radius: $radius-md;
+    background: $color-white;
+    color: $color-black;
+    font-family: $font-poppins;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: transform 180ms ease, opacity 180ms ease, background 180ms ease;
+
+    &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        background: #f3f4f6;
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(0);
+    }
+
+    &:focus-visible {
+        outline: 3px solid rgba(168, 85, 247, 0.55);
+        outline-offset: 3px;
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+    }
+}
+
+
+// ========================================
+// SUCCESS
+// ========================================
+
+.customer-payment__success {
+    width: min(680px, 100%);
+    margin: 40px auto 0;
+    padding: 48px 32px;
+    text-align: center;
+    background: $color-white;
+    border: 1px solid $border-color;
+    border-radius: $radius-lg;
+}
+
+.customer-payment__success-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 20px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: $payment-paid-bg;
+    color: $payment-paid-text;
+    font-size: 24px;
+}
+
+.customer-payment__success-title {
+    margin: 0;
+    font-family: $font-poppins;
+    font-size: 28px;
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+}
+
+.customer-payment__success-message {
+    margin: 10px auto 24px;
+    max-width: 440px;
+    color: $color-text-muted;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.customer-payment__success-order {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+    padding: 10px 14px;
+    border-radius: $radius-sm;
+    background: $color-surface;
+    color: $color-text-muted;
+    font-size: 12px;
+
+    strong {
+        color: $color-text;
+        font-family: $font-poppins;
+        font-weight: 600;
+    }
+}
+
+.customer-payment__success-total {
+    margin: 24px 0 8px;
+    color: $color-text-muted;
+    font-size: 13px;
+
+    strong {
+        display: block;
+        margin-top: 4px;
+        color: $color-text;
+        font-family: $font-poppins;
+        font-size: 28px;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+    }
+}
+
+.customer-payment__success-payment {
+    margin: 0;
+    color: $payment-paid-text;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+
+// ========================================
+// RESPONSIVE
+// ========================================
+
+@media (min-width: 860px) {
+
+    .customer-payment__body {
+        grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+        align-items: start;
+    }
+
+    .customer-payment__customer,
+    .customer-payment__discount,
+    .customer-payment__method,
+    .customer-payment__confirmation {
+        grid-column: 1;
+    }
+
+    .customer-payment__summary {
+        grid-column: 2;
+        grid-row: 1 / span 3;
+        position: sticky;
+        top: 24px;
+    }
+
+    .customer-payment__confirmation {
+        grid-column: 1;
+    }
+}
+
+
+@media (max-width: 859px) {
+
+    .customer-payment__content {
+        padding-top: $space-xl;
+    }
+
+    .customer-payment__customer,
+    .customer-payment__discount,
+    .customer-payment__method,
+    .customer-payment__summary {
+        padding: $space-lg;
+    }
+
+}
+
+
+@media (max-width: 560px) {
+
+    .customer-payment__header-inner,
+    .customer-payment__content {
+        width: min(100% - 24px, 1180px);
+    }
+
+    .customer-payment__header-inner {
+        min-height: 76px;
+    }
+
+    .customer-payment__title {
+        font-size: 24px;
+    }
+
+    .customer-payment__content {
+        padding: $space-lg 0 48px;
+    }
+
+    .customer-payment__customer,
+    .customer-payment__discount,
+    .customer-payment__method,
+    .customer-payment__summary {
+        padding: $space-md;
+        border-radius: $radius-md;
+    }
+
+    .customer-payment__section-header {
+        gap: 10px;
+        margin-bottom: $space-md;
+    }
+
+    .customer-payment__section-title {
+        font-size: 16px;
+    }
+
+    .customer-payment__section-description {
+        font-size: 12px;
+    }
+
+    .customer-payment__discount-controls {
+        flex-direction: column;
+    }
+
+    .customer-payment__discount-button {
+        width: 100%;
+    }
+
+    .customer-payment__option {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        padding: 15px;
+    }
+
+    .customer-payment__item {
+        grid-template-columns: 58px minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    .customer-payment__item-media {
+        width: 58px;
+        height: 72px;
+    }
+
+    .customer-payment__item-price {
+        grid-column: 2;
+        margin-top: -4px;
+        justify-self: start;
+        font-size: 13px;
+    }
+
+    .customer-payment__total-row--grand strong {
+        font-size: 22px;
+    }
+
+    .customer-payment__confirmation {
+        padding: $space-lg;
+    }
+
+    .customer-payment__success {
+        margin-top: 16px;
+        padding: 36px 20px;
+        border-radius: $radius-md;
+    }
+
+    .customer-payment__success-title {
+        font-size: 24px;
+    }
+
+    .customer-payment__success-total strong {
+        font-size: 24px;
+    }
+}
+
+
+// ========================================
+// REDUCED MOTION
+// ========================================
+
+@media (prefers-reduced-motion: reduce) {
+
+    .customer-payment__back,
+    .customer-payment__discount-button,
+    .customer-payment__option,
+    .customer-payment__submit {
+        transition: none;
+    }
+
+}
+
+// ========================================
+// HIDDEN STATE
+// ========================================
+// Ensure JS-controlled loading/error/body states
+// respect the native HTML [hidden] attribute.
+.customer-payment [hidden] {
+    display: none !important;
+}

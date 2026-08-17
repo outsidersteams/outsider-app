@@ -1,5 +1,6 @@
 import {
-    getProducts
+    getCustomerProductsCached,
+    getCustomerProductAvailabilityCached
 } from "../firebase/firestore.js";
 
 import {
@@ -20,6 +21,9 @@ let currentProduct = null;
 let selectedVariantId = null;
 
 let selectedSizeId = null;
+
+let currentProductAvailability =
+    new Map();
 
 
 // ========================================
@@ -102,7 +106,7 @@ export async function initCustomerProduct() {
         // ====================================
 
         const products =
-            await getProducts();
+            await getCustomerProductsCached();
 
 
         const product =
@@ -154,6 +158,70 @@ export async function initCustomerProduct() {
             normalizeProduct(
                 product
             );
+
+
+        // ====================================
+        // PUBLIC AVAILABILITY
+        // ====================================
+        //
+        // Physical products use the lightweight
+        // productAvailability projection.
+        // Made-to-order products never query inventory
+        // or availability.
+        // ====================================
+
+        currentProductAvailability =
+            new Map();
+
+        if (!isMadeToOrder()) {
+
+            const navigationEntry =
+                performance.getEntriesByType(
+                    "navigation"
+                )[0];
+
+            // Una recarga completa o una restauración desde
+            // historial puede conservar el estado anterior de
+            // la SPA. En ambos casos pedimos la proyección pública
+            // directamente al servidor para no mostrar una
+            // disponibilidad obsoleta.
+            const forceAvailabilityRefresh =
+                navigationEntry?.type === "reload" ||
+                navigationEntry?.type === "back_forward";
+
+            const availabilityItems =
+                await getCustomerProductAvailabilityCached(
+                    productId,
+                    {
+                        forceRefresh:
+                            forceAvailabilityRefresh
+                    }
+                );
+
+            availabilityItems.forEach(
+                item => {
+
+                    if (
+                        !item ||
+                        item.available === undefined
+                    ) {
+                        return;
+                    }
+
+                    currentProductAvailability.set(
+                        getAvailabilityKey(
+                            item.variantId,
+                            item.sizeId
+                        ),
+                        Boolean(
+                            item.available
+                        )
+                    );
+
+                }
+            );
+
+        }
 
 
         // ====================================
@@ -814,14 +882,62 @@ function isSizeAvailable(
     // PHYSICAL
     // ====================================
 
-    // Para productos físicos, Customer solo
-    // consulta el estado público del producto.
-    // El stock real permanece protegido en
-    // la colección inventory.
+    if (
+        variant.active === false ||
+        size.active === false
+    ) {
+        return false;
+    }
+
+
+    // `productAvailability` es la proyección pública
+    // de inventory. El stock real permanece protegido.
+    const availabilityKey =
+        getAvailabilityKey(
+            variant.id,
+            size.id
+        );
+
+
+    if (
+        currentProductAvailability.has(
+            availabilityKey
+        )
+    ) {
+
+        return (
+            currentProductAvailability.get(
+                availabilityKey
+            ) === true
+        );
+
+    }
+
+
+    // Compatibilidad temporal con productos existentes que
+    // todavía no tengan documento en productAvailability.
+    //
+    // La fuente pública principal es productAvailability.
+    // Este fallback solo conserva compatibilidad con datos
+    // antiguos y no expone el stock real.
+    return size.available === true;
+
+}
+
+
+// ========================================
+// AVAILABILITY KEY
+// ========================================
+
+function getAvailabilityKey(
+    variantId,
+    sizeId
+) {
+
     return (
-        variant.active !== false &&
-        size.active !== false &&
-        size.available === true
+        String(variantId ?? "") +
+        "::" +
+        String(sizeId ?? "")
     );
 
 }
@@ -829,7 +945,7 @@ function isSizeAvailable(
 
 // ========================================
 // CURRENT VARIANT
-// ========================================
+// =======================================
 
 function getSelectedVariant() {
 

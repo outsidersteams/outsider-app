@@ -2,6 +2,7 @@ import {
     getFirestore,
     collection,
     getDocs,
+    getDocsFromServer,
     doc,
     getDoc,
     setDoc,
@@ -120,6 +121,297 @@ export async function getProducts() {
             ...document.data()
         })
     );
+
+}
+
+// ========================================
+// CUSTOMER WEB — PRODUCT CACHE
+// ========================================
+//
+// El catálogo público se cachea en localStorage para
+// evitar lecturas repetidas cuando el cliente navega
+// entre productos dentro de la SPA.
+//
+// TTL corto: 60 segundos. La disponibilidad pública
+// se mantiene en `productAvailability`.
+// El stock real jamás depende del cache: Payment/Order
+// vuelve a validar el inventory real.
+//
+// ========================================
+
+const CUSTOMER_PRODUCTS_CACHE_KEY =
+    "outsider_customer_products_cache_v1";
+
+const CUSTOMER_PRODUCTS_CACHE_TTL_MS =
+    60 * 1000;
+
+export async function getCustomerProductsCached(
+    options = {}
+) {
+
+    const forceRefresh =
+        options.forceRefresh === true;
+
+    const now =
+        Date.now();
+
+    if (!forceRefresh) {
+
+        try {
+
+            const raw =
+                localStorage.getItem(
+                    CUSTOMER_PRODUCTS_CACHE_KEY
+                );
+
+            if (raw) {
+
+                const cached =
+                    JSON.parse(raw);
+
+                if (
+                    Array.isArray(cached.products) &&
+                    Number.isFinite(cached.savedAt) &&
+                    now - cached.savedAt <
+                    CUSTOMER_PRODUCTS_CACHE_TTL_MS
+                ) {
+
+                    return cached.products;
+
+                }
+
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "No se pudo leer el cache de productos Customer:",
+                error
+            );
+
+        }
+
+    }
+
+    const products =
+        await getProducts();
+
+    try {
+
+        localStorage.setItem(
+            CUSTOMER_PRODUCTS_CACHE_KEY,
+            JSON.stringify({
+                savedAt: now,
+                products
+            })
+        );
+
+    } catch (error) {
+
+        console.warn(
+            "No se pudo guardar el cache de productos Customer:",
+            error
+        );
+
+    }
+
+    return products;
+
+}
+
+export function clearCustomerProductsCache() {
+
+    try {
+
+        localStorage.removeItem(
+            CUSTOMER_PRODUCTS_CACHE_KEY
+        );
+
+    } catch (error) {
+
+        console.warn(
+            "No se pudo limpiar el cache de productos Customer:",
+            error
+        );
+
+    }
+
+}
+
+// ========================================
+// CUSTOMER WEB — PRODUCT AVAILABILITY CACHE
+// ========================================
+//
+// La disponibilidad pública se mantiene separada de
+// `products` para que Enterprise pueda actualizarla sin
+// abrir permisos de escritura sobre el catálogo.
+//
+// El stock real permanece exclusivamente en `inventory`.
+// Customer Web solo recibe `available: true/false`.
+//
+// TTL corto: 30 segundos.
+// En una recarga completa del navegador Product Detail
+// puede solicitar una lectura fresca explícita.
+//
+// ========================================
+
+const CUSTOMER_PRODUCT_AVAILABILITY_CACHE_PREFIX =
+    "outsider_customer_product_availability_v1_";
+
+const CUSTOMER_PRODUCT_AVAILABILITY_CACHE_TTL_MS =
+    30 * 1000;
+
+function getCustomerProductAvailabilityCacheKey(
+    productId
+) {
+
+    return (
+        CUSTOMER_PRODUCT_AVAILABILITY_CACHE_PREFIX +
+        String(productId || "")
+    );
+
+}
+
+export async function getCustomerProductAvailabilityCached(
+    productId,
+    options = {}
+) {
+
+    if (!productId) {
+        return [];
+    }
+
+    const forceRefresh =
+        options.forceRefresh === true;
+
+    const cacheKey =
+        getCustomerProductAvailabilityCacheKey(
+            productId
+        );
+
+    const now =
+        Date.now();
+
+    if (!forceRefresh) {
+
+        try {
+
+            const raw =
+                localStorage.getItem(
+                    cacheKey
+                );
+
+            if (raw) {
+
+                const cached =
+                    JSON.parse(raw);
+
+                if (
+                    Array.isArray(cached.items) &&
+                    Number.isFinite(cached.savedAt) &&
+                    now - cached.savedAt <
+                    CUSTOMER_PRODUCT_AVAILABILITY_CACHE_TTL_MS
+                ) {
+
+                    return cached.items;
+
+                }
+
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "No se pudo leer el cache de disponibilidad Customer:",
+                error
+            );
+
+        }
+
+    }
+
+    const availabilityRef =
+        collection(
+            db,
+            "productAvailability"
+        );
+
+    const availabilityQuery =
+        query(
+            availabilityRef,
+            where(
+                "productId",
+                "==",
+                productId
+            )
+        );
+
+    const snapshot =
+        forceRefresh
+            ? await getDocsFromServer(
+                availabilityQuery
+            )
+            : await getDocs(
+                availabilityQuery
+            );
+
+    const items =
+        snapshot.docs.map(
+            document => ({
+                id:
+                    document.id,
+
+                ...document.data()
+            })
+        );
+
+    try {
+
+        localStorage.setItem(
+            cacheKey,
+            JSON.stringify({
+                savedAt: now,
+                items
+            })
+        );
+
+    } catch (error) {
+
+        console.warn(
+            "No se pudo guardar el cache de disponibilidad Customer:",
+            error
+        );
+
+    }
+
+    return items;
+
+}
+
+export function clearCustomerProductAvailabilityCache(
+    productId
+) {
+
+    if (!productId) {
+        return;
+    }
+
+    try {
+
+        localStorage.removeItem(
+            getCustomerProductAvailabilityCacheKey(
+                productId
+            )
+        );
+
+    } catch (error) {
+
+        console.warn(
+            "No se pudo limpiar el cache de disponibilidad Customer:",
+            error
+        );
+
+    }
 
 }
 
@@ -1528,6 +1820,687 @@ export async function getOrders() {
 }
 
 // ========================================
+// CREATE CUSTOMER ORDER — CUSTOMER WEB
+// ========================================
+//
+// Crea una orden desde Customer Web y descuenta
+// inventario + registra movimientos dentro de una
+// única transacción de Firestore.
+//
+// IMPORTANTE:
+// Firestore Transaction.get() requiere DocumentReference.
+// La consulta de inventory obtiene primero el documento
+// exacto y luego la transacción vuelve a leer esa referencia
+// para protegerse contra cambios concurrentes.
+//
+// Todas las lecturas de la transacción se realizan
+// antes de las escrituras.
+//
+// El precio real siempre se obtiene desde Firestore.
+// El frontend solamente proporciona IDs y cantidades.
+//
+// ========================================
+
+export async function createCustomerOrder(
+    orderData = {}
+) {
+
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+        throw new Error(
+            "No hay una cuenta Customer autenticada."
+        );
+    }
+
+    const customerId = String(orderData.customerId || "").trim();
+
+    if (!customerId) {
+        throw new Error("El Customer es obligatorio.");
+    }
+
+    const items = Array.isArray(orderData.items) ? orderData.items : [];
+
+    if (!items.length) {
+        throw new Error(
+            "El pedido debe contener al menos un producto."
+        );
+    }
+
+    const paymentMethod = String(
+        orderData.paymentMethod || "cash_on_delivery"
+    ).trim();
+
+    if (paymentMethod !== "cash_on_delivery") {
+        throw new Error(
+            "El método de pago seleccionado no está disponible."
+        );
+    }
+
+    const shipping = Number(orderData.shipping ?? 0);
+
+    if (!Number.isFinite(shipping) || shipping < 0) {
+        throw new Error("El costo de envío no es válido.");
+    }
+
+    const discount = Number(orderData.discount ?? 0);
+
+    if (!Number.isFinite(discount) || discount < 0) {
+        throw new Error("El descuento no es válido.");
+    }
+
+    const requestedItems = items.map(item => {
+        const productId = String(item.productId || "").trim();
+        const variantId = item.variantId ? String(item.variantId).trim() : null;
+        const sizeId = item.sizeId ? String(item.sizeId).trim() : null;
+        const quantity = Number(item.quantity);
+
+        if (!productId) {
+            throw new Error("Uno de los productos no tiene productId.");
+        }
+
+        if (
+            !Number.isFinite(quantity) ||
+            quantity <= 0 ||
+            !Number.isInteger(quantity)
+        ) {
+            throw new Error("La cantidad de un producto no es válida.");
+        }
+
+        return { productId, variantId, sizeId, quantity };
+    });
+
+    const customerRef = doc(db, "customers", customerId);
+    const productRefs = requestedItems.map(item =>
+        doc(db, "products", item.productId)
+    );
+
+    const ordersRef = collection(db, "orders");
+    const orderRef = doc(ordersRef);
+    const movementsRef = collection(db, "inventoryMovements");
+
+    let result = null;
+
+    await runTransaction(db, async transaction => {
+
+        // ====================================
+        // TODAS LAS LECTURAS BASE
+        // ====================================
+
+        const transactionCustomerSnapshot =
+            await transaction.get(customerRef);
+
+        if (!transactionCustomerSnapshot.exists()) {
+            throw new Error("El Customer no existe.");
+        }
+
+        const transactionCustomer =
+            transactionCustomerSnapshot.data();
+
+        if (transactionCustomer.authUid !== currentUser.uid) {
+            throw new Error(
+                "El Customer no está vinculado a la cuenta autenticada."
+            );
+        }
+
+        if (transactionCustomer.active === false) {
+            throw new Error("La cuenta Customer está inactiva.");
+        }
+
+        const productSnapshots = [];
+
+        for (const productRef of productRefs) {
+            productSnapshots.push(
+                await transaction.get(productRef)
+            );
+        }
+
+        // ====================================
+        // VALIDAR PRODUCTOS / FULFILLMENT
+        // ====================================
+
+        const normalizedItems = [];
+        const physicalItems = [];
+        let subtotal = 0;
+        let requiresProduction = false;
+
+        for (let index = 0; index < requestedItems.length; index++) {
+
+            const requestedItem = requestedItems[index];
+            const productSnapshot = productSnapshots[index];
+
+            if (!productSnapshot.exists()) {
+                throw new Error(
+                    `El producto ${requestedItem.productId} ya no existe.`
+                );
+            }
+
+            const product = productSnapshot.data();
+
+            if (
+                product.active !== true ||
+                product.publishedActive?.web !== true
+            ) {
+                throw new Error(
+                    `El producto "${product.name || "Producto"}" ya no está disponible.`
+                );
+            }
+
+            const fulfillmentType = String(
+                product.fulfillment?.type || "physical"
+            ).trim().toLowerCase();
+
+            if (!['physical', 'made_to_order'].includes(fulfillmentType)) {
+                throw new Error(
+                    `El tipo de fulfillment del producto "${product.name || "Producto"}" no es válido.`
+                );
+            }
+
+            if (fulfillmentType === "made_to_order") {
+                requiresProduction = true;
+            }
+
+            let variant = null;
+
+            if (requestedItem.variantId) {
+                variant = Array.isArray(product.variants)
+                    ? product.variants.find(
+                        item => item.id === requestedItem.variantId
+                    )
+                    : null;
+
+                if (!variant) {
+                    throw new Error(
+                        `La variante del producto "${product.name || "Producto"}" no existe.`
+                    );
+                }
+
+                if (variant.active === false) {
+                    throw new Error(
+                        `La variante de "${product.name || "Producto"}" ya no está disponible.`
+                    );
+                }
+            }
+
+            let size = null;
+
+            if (requestedItem.sizeId) {
+                if (!variant) {
+                    throw new Error(
+                        `La talla del producto "${product.name || "Producto"}" requiere una variante.`
+                    );
+                }
+
+                size = Array.isArray(variant.sizes)
+                    ? variant.sizes.find(
+                        item => item.id === requestedItem.sizeId
+                    )
+                    : null;
+
+                if (!size) {
+                    throw new Error(
+                        `La talla seleccionada de "${product.name || "Producto"}" ya no existe.`
+                    );
+                }
+
+                if (size.active === false) {
+                    throw new Error(
+                        `La talla seleccionada de "${product.name || "Producto"}" ya no está disponible.`
+                    );
+                }
+            }
+
+            const candidatePrices = [
+                size?.price,
+                variant?.price,
+                product.price
+            ];
+
+            let unitPrice = null;
+
+            for (const candidate of candidatePrices) {
+                const numericPrice = Number(candidate);
+
+                if (
+                    Number.isFinite(numericPrice) &&
+                    numericPrice >= 0
+                ) {
+                    unitPrice = numericPrice;
+                    break;
+                }
+            }
+
+            if (unitPrice === null) {
+                throw new Error(
+                    `No se encontró un precio válido para "${product.name || "Producto"}".`
+                );
+            }
+
+            const lineTotal = unitPrice * requestedItem.quantity;
+            subtotal += lineTotal;
+
+            normalizedItems.push({
+                productId:
+                    requestedItem.productId,
+
+                productName:
+                    String(
+                        product.name || "Producto"
+                    ).trim(),
+
+                fulfillmentType,
+
+                variantId:
+                    requestedItem.variantId,
+
+                variantName:
+                    variant?.name || null,
+
+                colorName:
+                    variant?.colorName ||
+                    variant?.color ||
+                    null,
+
+                sizeId:
+                    requestedItem.sizeId,
+
+                sizeName:
+                    size?.name || null,
+
+                sku:
+                    size?.sku || null,
+
+                // ====================================
+                // ORDER ITEM STANDARD
+                // ====================================
+                // `unitPrice` y `total` son los nombres
+                // canónicos utilizados por la vista de Orders.
+                //
+                // `price` y `lineTotal` se conservan temporalmente
+                // para compatibilidad con código anterior.
+                // ====================================
+
+                unitPrice:
+                    unitPrice,
+
+                price:
+                    unitPrice,
+
+                quantity:
+                    requestedItem.quantity,
+
+                total:
+                    lineTotal,
+
+                lineTotal:
+                    lineTotal,
+
+                inventoryId:
+                    null
+            });
+
+            if (fulfillmentType === "physical") {
+                physicalItems.push({
+                    itemIndex: normalizedItems.length - 1,
+                    requestedItem
+                });
+            }
+        }
+
+        // ====================================
+        // INVENTARIO SOLO PARA PHYSICAL
+        // ====================================
+        // made_to_order no necesita documento
+        // en inventory y no descuenta stock.
+        // ====================================
+
+        const inventoryEntries = [];
+
+        for (const physicalItem of physicalItems) {
+
+            const requestedItem = physicalItem.requestedItem;
+            const inventoryRef = collection(db, "inventory");
+            let inventoryQuery;
+
+            if (requestedItem.sizeId) {
+                if (!requestedItem.variantId) {
+                    throw new Error(
+                        "Una talla requiere una variante válida."
+                    );
+                }
+
+                inventoryQuery = query(
+                    inventoryRef,
+                    where("productId", "==", requestedItem.productId),
+                    where("variantId", "==", requestedItem.variantId),
+                    where("sizeId", "==", requestedItem.sizeId)
+                );
+            } else if (requestedItem.variantId) {
+                inventoryQuery = query(
+                    inventoryRef,
+                    where("productId", "==", requestedItem.productId),
+                    where("variantId", "==", requestedItem.variantId)
+                );
+            } else {
+                inventoryQuery = query(
+                    inventoryRef,
+                    where("productId", "==", requestedItem.productId)
+                );
+            }
+
+            const inventorySnapshot = await getDocs(inventoryQuery);
+
+            if (inventorySnapshot.empty) {
+                throw new Error(
+                    `No existe inventario para el producto ${requestedItem.productId}.`
+                );
+            }
+
+            if (inventorySnapshot.size > 1) {
+                throw new Error(
+                    `Existe más de un registro de inventario para el producto ${requestedItem.productId}.`
+                );
+            }
+
+            const inventoryDocumentRef = inventorySnapshot.docs[0].ref;
+            const inventorySnapshotInTransaction =
+                await transaction.get(inventoryDocumentRef);
+
+            if (!inventorySnapshotInTransaction.exists()) {
+                throw new Error(
+                    `El inventario del producto ${requestedItem.productId} ya no existe.`
+                );
+            }
+
+            const inventory = inventorySnapshotInTransaction.data();
+            const normalizedItem = normalizedItems[physicalItem.itemIndex];
+
+            if (inventory.productId !== requestedItem.productId) {
+                throw new Error(
+                    "El inventario encontrado no corresponde al producto solicitado."
+                );
+            }
+
+            if (
+                requestedItem.variantId &&
+                inventory.variantId !== requestedItem.variantId
+            ) {
+                throw new Error(
+                    "El inventario encontrado no corresponde a la variante solicitada."
+                );
+            }
+
+            if (
+                requestedItem.sizeId &&
+                inventory.sizeId !== requestedItem.sizeId
+            ) {
+                throw new Error(
+                    "El inventario encontrado no corresponde a la talla solicitada."
+                );
+            }
+
+            const currentStock = Number(inventory.stock);
+
+            if (!Number.isFinite(currentStock) || currentStock < 0) {
+                throw new Error(
+                    `El stock de "${normalizedItem.productName}" no es válido.`
+                );
+            }
+
+            if (requestedItem.quantity > currentStock) {
+                throw new Error(
+                    `Stock insuficiente para "${normalizedItem.productName}". Disponible: ${currentStock}.`
+                );
+            }
+
+            normalizedItem.sku =
+                normalizedItem.sku || inventory.sku || null;
+
+            normalizedItem.inventoryId = inventoryDocumentRef.id;
+
+            inventoryEntries.push({
+                itemIndex: physicalItem.itemIndex,
+                ref: inventoryDocumentRef,
+                data: inventory
+            });
+        }
+
+        // ====================================
+        // DESCUENTO / TOTAL
+        // ====================================
+
+        if (discount > subtotal) {
+            throw new Error(
+                "El descuento no puede ser mayor que el subtotal."
+            );
+        }
+
+        const calculatedTotal =
+            subtotal + shipping - discount;
+
+        if (
+            !Number.isFinite(calculatedTotal) ||
+            calculatedTotal <= 0
+        ) {
+            throw new Error(
+                "El total del pedido debe ser mayor a Q0.00."
+            );
+        }
+
+        // ====================================
+        // ORDER NUMBER
+        // ====================================
+        // El número secuencial oficial debe ser asignado por
+        // el backend/Cloud Function que crea la orden Customer.
+        // Este data-layer conserva el fallback histórico para
+        // no romper llamadas directas existentes.
+        //
+        // Cuando el backend envía `orderData.orderNumber`, se
+        // respeta ese número.
+        // ====================================
+
+        const requestedOrderNumber =
+            Number(
+                orderData.orderNumber
+            );
+
+        const orderNumber =
+            Number.isInteger(
+                requestedOrderNumber
+            ) &&
+            requestedOrderNumber > 0
+                ? requestedOrderNumber
+                : Number(
+                    String(Date.now()).slice(-9)
+                );
+
+        const customerSnapshot = {
+            name: transactionCustomer.name || "",
+            email:
+                transactionCustomer.email ||
+                currentUser.email ||
+                "",
+            phone: transactionCustomer.phone || "",
+            address: transactionCustomer.address || {}
+        };
+
+        // ====================================
+        // WRITES DE INVENTARIO SOLO PHYSICAL
+        // ====================================
+        //
+        // Inventory + inventoryMovement +
+        // productAvailability quedan dentro de la
+        // MISMA transacción que el Order.
+        // ====================================
+
+        for (const inventoryEntry of inventoryEntries) {
+
+            const normalizedItem =
+                normalizedItems[inventoryEntry.itemIndex];
+
+            const inventory = inventoryEntry.data;
+            const currentStock = Number(inventory.stock);
+
+            const newStock =
+                currentStock -
+                normalizedItem.quantity;
+
+            transaction.update(
+                inventoryEntry.ref,
+                {
+                    stock:
+                        newStock,
+
+                    updatedAt:
+                        serverTimestamp()
+                }
+            );
+
+            const movementRef =
+                doc(movementsRef);
+
+            transaction.set(
+                movementRef,
+                {
+                    inventoryId:
+                        inventoryEntry.ref.id,
+
+                    productId:
+                        inventory.productId,
+
+                    variantId:
+                        inventory.variantId ||
+                        null,
+
+                    sizeId:
+                        inventory.sizeId ||
+                        null,
+
+                    sku:
+                        inventory.sku ||
+                        normalizedItem.sku ||
+                        null,
+
+                    type:
+                        "exit",
+
+                    quantity:
+                        normalizedItem.quantity,
+
+                    reason:
+                        "sale",
+
+                    referenceType:
+                        "order",
+
+                    referenceId:
+                        orderRef.id,
+
+                    notes:
+                        "Salida automática por pedido Customer Web.",
+
+                    createdAt:
+                        serverTimestamp(),
+
+                    createdBy: {
+                        uid:
+                            currentUser.uid,
+
+                        name:
+                            transactionCustomer.name ||
+                            currentUser.displayName ||
+                            currentUser.email ||
+                            "Customer Web",
+
+                        email:
+                            currentUser.email ||
+                            null
+                    }
+                }
+            );
+
+            // La disponibilidad pública se actualiza
+            // atómicamente con el descuento real.
+            await syncProductSizeAvailabilityInTransaction(
+                transaction,
+                inventory.productId,
+                inventory.variantId,
+                inventory.sizeId,
+                newStock > 0
+            );
+        }
+
+        const productionStatus =
+            requiresProduction
+                ? "pending"
+                : "not_required";
+
+        const orderDataToSave = {
+            orderNumber,
+            customerId,
+            customerAuthUid: currentUser.uid,
+            customerSnapshot,
+            // `items` usa el mismo contrato de Orders que Enterprise:
+            // unitPrice + total, conservando price + lineTotal por compatibilidad.
+            items: normalizedItems,
+            subtotal,
+            discount,
+            shipping,
+            total: calculatedTotal,
+            orderStatus: "confirmed",
+            paymentStatus: "pending",
+            productionStatus,
+            requiresProduction,
+            paymentMethod,
+            salesChannel: "web",
+            source: "web",
+            createdByUid: currentUser.uid,
+            createdByName:
+                transactionCustomer.name ||
+                currentUser.displayName ||
+                currentUser.email ||
+                "Customer Web",
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        };
+
+        transaction.set(orderRef, orderDataToSave);
+
+        result = {
+            orderId: orderRef.id,
+            orderNumber,
+            subtotal,
+            discount,
+            shipping,
+            total: calculatedTotal,
+            requiresProduction,
+            productionStatus
+        };
+    });
+
+    // La transacción ya actualizó la proyección pública.
+    // Limpiamos el cache local únicamente después del éxito.
+    for (const item of normalizedItems) {
+
+        if (item.fulfillmentType === "physical") {
+
+            clearCustomerProductAvailabilityCache(
+                item.productId
+            );
+
+        }
+
+    }
+
+    console.log(
+        "✓ Pedido Customer Web creado:",
+        result
+    );
+
+    return result;
+}
+
+// ========================================
 // CREATE ORDER — ENTERPRISE POS
 // ========================================
 
@@ -1572,18 +2545,87 @@ export async function createOrder(orderData = {}) {
 
     const orderNumber = maxOrderNumber + 1;
 
-    const normalizedItems = items.map(item => ({
-        productId: item.productId || null,
-        productName: String(item.productName || "Producto").trim(),
-        variantId: item.variantId || null,
-        variantName: item.variantName || null,
-        colorName: item.colorName || null,
-        sizeName: item.sizeName || null,
-        sku: item.sku || null,
-        price: Number(item.price || 0),
-        quantity: Math.max(1, Number(item.quantity || 1)),
-        lineTotal: Number(item.lineTotal || 0)
-    }));
+    const normalizedItems = items.map(item => {
+
+        const unitPrice =
+            Number(
+                item.unitPrice ??
+                item.price ??
+                0
+            );
+
+        const quantity =
+            Math.max(
+                1,
+                Number(
+                    item.quantity || 1
+                )
+            );
+
+        const total =
+            Number(
+                item.total ??
+                item.lineTotal ??
+                unitPrice * quantity
+            );
+
+        return {
+
+            productId:
+                item.productId ||
+                null,
+
+            productName:
+                String(
+                    item.productName ||
+                    "Producto"
+                ).trim(),
+
+            fulfillmentType:
+                item.fulfillmentType ||
+                "physical",
+
+            variantId:
+                item.variantId ||
+                null,
+
+            variantName:
+                item.variantName ||
+                null,
+
+            colorName:
+                item.colorName ||
+                null,
+
+            sizeId:
+                item.sizeId ||
+                null,
+
+            sizeName:
+                item.sizeName ||
+                null,
+
+            sku:
+                item.sku ||
+                null,
+
+            // Contrato canónico
+            unitPrice,
+
+            quantity,
+
+            total,
+
+            // Compatibilidad legacy
+            price:
+                unitPrice,
+
+            lineTotal:
+                total
+
+        };
+
+    });
 
     const userProfile = await getUserProfile(currentUser.uid);
     const createdByName =
@@ -2047,6 +3089,13 @@ export async function createInventory(
         );
 
 
+    await syncProductSizeAvailability(
+        productId,
+        variantId,
+        sizeId,
+        stock > 0
+    );
+
     console.log(
         "✓ Inventory creado:",
         inventoryDocument.id
@@ -2101,6 +3150,165 @@ async function getInventoryMovementUser() {
     };
 
 }
+
+
+// ========================================
+// SYNC PUBLIC PRODUCT AVAILABILITY
+// ========================================
+//
+// Mantiene una proyección pública mínima de disponibilidad
+// a partir del inventory real.
+//
+// IMPORTANTE:
+// - `inventory` continúa siendo la fuente de verdad.
+// - Customer Web NO recibe stock ni acceso a inventory.
+// - No modificamos `products` desde Employee.
+// - Solo se publica available: true/false.
+//
+// ========================================
+
+function getProductAvailabilityDocumentId(
+    productId,
+    variantId,
+    sizeId
+) {
+
+    return [
+        productId,
+        variantId,
+        sizeId
+    ]
+        .map(
+            value =>
+                encodeURIComponent(
+                    String(value)
+                )
+        )
+        .join("__");
+
+}
+
+async function syncProductSizeAvailabilityInTransaction(
+    transaction,
+    productId,
+    variantId,
+    sizeId,
+    available
+) {
+
+    if (!productId || !variantId || !sizeId) {
+        return null;
+    }
+
+    const availabilityId =
+        getProductAvailabilityDocumentId(
+            productId,
+            variantId,
+            sizeId
+        );
+
+    const availabilityRef =
+        doc(
+            db,
+            "productAvailability",
+            availabilityId
+        );
+
+    transaction.set(
+        availabilityRef,
+        {
+            productId:
+                String(productId),
+
+            variantId:
+                String(variantId),
+
+            sizeId:
+                String(sizeId),
+
+            available:
+                Boolean(available),
+
+            updatedAt:
+                serverTimestamp()
+        },
+        {
+            merge:
+                true
+        }
+    );
+
+    return availabilityRef;
+}
+
+async function syncProductSizeAvailability(
+    productId,
+    variantId,
+    sizeId,
+    available
+) {
+
+    if (!productId || !variantId || !sizeId) {
+        return false;
+    }
+
+    const availabilityId =
+        getProductAvailabilityDocumentId(
+            productId,
+            variantId,
+            sizeId
+        );
+
+    const availabilityRef =
+        doc(
+            db,
+            "productAvailability",
+            availabilityId
+        );
+
+    await setDoc(
+        availabilityRef,
+        {
+            productId:
+                String(productId),
+
+            variantId:
+                String(variantId),
+
+            sizeId:
+                String(sizeId),
+
+            available:
+                Boolean(available),
+
+            updatedAt:
+                serverTimestamp()
+        },
+        {
+            merge:
+                true
+        }
+    );
+
+    clearCustomerProductAvailabilityCache(
+        productId
+    );
+
+    console.log(
+        "✓ Disponibilidad pública sincronizada:",
+        {
+            productId,
+            variantId,
+            sizeId,
+            available:
+                Boolean(available)
+        }
+    );
+
+    return true;
+
+}
+
 
 // ========================================
 // REGISTER INVENTORY ENTRY
@@ -2297,6 +3505,24 @@ export async function registerInventoryEntry(
         }
     );
 
+
+    // ====================================
+    // SYNC PUBLIC AVAILABILITY
+    // ====================================
+
+    const entryInventory =
+        await getInventoryItem(
+            inventoryId
+        );
+
+    if (entryInventory) {
+        await syncProductSizeAvailability(
+            entryInventory.productId,
+            entryInventory.variantId,
+            entryInventory.sizeId,
+            Number(entryInventory.stock) > 0
+        );
+    }
 
     // ====================================
     // RESULTADO
@@ -2536,6 +3762,24 @@ export async function registerInventoryExit(
         }
     );
 
+
+    // ====================================
+    // SYNC PUBLIC AVAILABILITY
+    // ====================================
+
+    const exitInventory =
+        await getInventoryItem(
+            inventoryId
+        );
+
+    if (exitInventory) {
+        await syncProductSizeAvailability(
+            exitInventory.productId,
+            exitInventory.variantId,
+            exitInventory.sizeId,
+            Number(exitInventory.stock) > 0
+        );
+    }
 
     // ====================================
     // RESULTADO
@@ -2780,6 +4024,24 @@ export async function registerInventoryAdjustment(
 
 
     // ====================================
+    // SYNC PUBLIC AVAILABILITY
+    // ====================================
+
+    const adjustedInventory =
+        await getInventoryItem(
+            inventoryId
+        );
+
+    if (adjustedInventory) {
+        await syncProductSizeAvailability(
+            adjustedInventory.productId,
+            adjustedInventory.variantId,
+            adjustedInventory.sizeId,
+            Number(adjustedInventory.stock) > 0
+        );
+    }
+
+    // ====================================
     // RESULTADO
     // ====================================
 
@@ -2810,6 +4072,109 @@ export async function registerInventoryAdjustment(
     };
 
 }
+// ========================================
+// SYNC EXISTING INVENTORY AVAILABILITY
+// ========================================
+//
+// Utilidad de bootstrap para inventario creado antes
+// de introducir `productAvailability`.
+//
+// NO modifica inventory.
+// Solo crea/actualiza la proyección pública
+// available: true/false.
+//
+// Debe ejecutarse una vez sobre inventario histórico
+// después de desplegar las Rules nuevas.
+// ========================================
+
+export async function syncProductAvailabilityForInventory(
+    inventoryId
+) {
+
+    const inventory =
+        await getInventoryItem(
+            inventoryId
+        );
+
+    if (!inventory) {
+
+        throw new Error(
+            "El registro de inventario no existe."
+        );
+
+    }
+
+    await syncProductSizeAvailability(
+        inventory.productId,
+        inventory.variantId,
+        inventory.sizeId,
+        Number(inventory.stock) > 0
+    );
+
+    return {
+        inventoryId,
+        productId: inventory.productId,
+        variantId: inventory.variantId,
+        sizeId: inventory.sizeId,
+        available: Number(inventory.stock) > 0
+    };
+
+}
+
+export async function syncAllProductAvailability() {
+
+    const inventoryItems =
+        await getInventory();
+
+    let synced = 0;
+    let skipped = 0;
+
+    for (const inventory of inventoryItems) {
+
+        if (
+            !inventory.productId ||
+            !inventory.variantId ||
+            !inventory.sizeId
+        ) {
+
+            skipped++;
+            continue;
+
+        }
+
+        await syncProductSizeAvailability(
+            inventory.productId,
+            inventory.variantId,
+            inventory.sizeId,
+            Number(inventory.stock) > 0
+        );
+
+        synced++;
+
+    }
+
+    console.log(
+        "✓ Disponibilidad pública reconstruida desde inventory:",
+        {
+            totalInventory:
+                inventoryItems.length,
+
+            synced,
+            skipped
+        }
+    );
+
+    return {
+        totalInventory:
+            inventoryItems.length,
+
+        synced,
+        skipped
+    };
+
+}
+
+
 export async function getInventoryMovements() {
 
     const movementsRef =

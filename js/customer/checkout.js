@@ -1507,26 +1507,22 @@ async function handleCheckoutSubmit(
 
 
         // ====================================
-        // SIGUIENTE ETAPA
+        // SIGUIENTE ETAPA — PAYMENT
         // ====================================
 
         /*
-            Todavía no navegamos a Payment.
-
-            En esta etapa solamente confirmamos
-            que los datos del Customer quedaron
+            Los datos del Customer ya fueron
             guardados correctamente.
 
-            La siguiente fase conectará este punto
-            con Payment.
+            El carrito permanece intacto.
+
+            Ahora continuamos al siguiente paso
+            del checkout: Payment.
         */
 
-        if (submitButton) {
-
-            submitButton.textContent =
-                "DATOS GUARDADOS";
-
-        }
+        navigateTo(
+            "/payment"
+        );
 
 
     } catch (error) {
