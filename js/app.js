@@ -23,7 +23,7 @@ import {
     getCurrentUserProfile
 } from "./firebase/userService.js";
 
-
+import "./pwa/install.js";
 // ========================================
 // OUTSIDER — GLOBAL APP LOADER
 // ========================================
@@ -1062,3 +1062,33 @@ async function testFirestore() {
 // ========================================
 
 testFirestore();
+// ========================================
+// OUTSIDER — SERVICE WORKER
+// ========================================
+
+if ("serviceWorker" in navigator) {
+
+    window.addEventListener("load", () => {
+
+        navigator.serviceWorker
+            .register("/sw.js")
+            .then((registration) => {
+
+                console.log(
+                    "✓ OUTSIDER Service Worker registrado:",
+                    registration.scope
+                );
+
+            })
+            .catch((error) => {
+
+                console.error(
+                    "✗ Error registrando OUTSIDER Service Worker:",
+                    error
+                );
+
+            });
+
+    });
+
+}
