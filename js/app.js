@@ -25,6 +25,37 @@ import {
 
 
 // ========================================
+// OUTSIDER — GLOBAL APP LOADER
+// ========================================
+
+function hideAppLoader() {
+
+    const loader =
+        document.querySelector(
+            "#app-loader"
+        );
+
+    if (!loader) {
+
+        return;
+
+    }
+
+    loader.classList.add(
+        "is-hidden"
+    );
+
+
+    setTimeout(() => {
+
+        loader.remove();
+
+    }, 300);
+
+}
+
+
+// ========================================
 // OUTSIDER API — FIRESTORE TEST
 // ========================================
 //
@@ -174,22 +205,6 @@ async function testOutsiderFirestore() {
 //
 // PRUEBA TEMPORAL.
 //
-// Customer
-//      ↓
-// Firebase Auth
-//      ↓
-// Firebase ID Token
-//      ↓
-// Cloudflare outsider-api
-//      ↓
-// Firebase Admin
-//      ↓
-// products + inventory
-//      ↓
-// VALIDACIÓN
-//
-// IMPORTANTE:
-//
 // Esta prueba NO descuenta inventario.
 // NO crea orders.
 // NO crea inventoryMovements.
@@ -226,10 +241,6 @@ window.testPhysicalOrderValidation =
         );
 
 
-        // ====================================
-        // 1. OBTENER USUARIO ACTUAL
-        // ====================================
-
         const user =
             auth.currentUser;
 
@@ -260,7 +271,7 @@ window.testPhysicalOrderValidation =
         try {
 
             // ====================================
-            // 2. OBTENER FIREBASE ID TOKEN
+            // 1. FIREBASE ID TOKEN
             // ====================================
 
             const idToken =
@@ -284,7 +295,7 @@ window.testPhysicalOrderValidation =
 
 
             // ====================================
-            // 3. PREPARAR REQUEST
+            // 2. REQUEST
             // ====================================
 
             const requestBody = {
@@ -319,7 +330,7 @@ window.testPhysicalOrderValidation =
 
 
             // ====================================
-            // 4. LLAMAR CLOUDFLARE
+            // 3. LLAMAR CLOUDFLARE
             // ====================================
 
             const response =
@@ -356,7 +367,7 @@ window.testPhysicalOrderValidation =
 
 
             // ====================================
-            // 5. LEER RESPUESTA
+            // 4. RESPONSE
             // ====================================
 
             let result =
@@ -376,10 +387,6 @@ window.testPhysicalOrderValidation =
 
             }
 
-
-            // ====================================
-            // 6. MOSTRAR RESULTADO
-            // ====================================
 
             if (!response.ok) {
 
@@ -415,22 +422,12 @@ window.testPhysicalOrderValidation =
 
 
 // ========================================
-// OUTSIDER API — MADE-TO-ORDER ORDER VALIDATION
+// OUTSIDER API — MADE-TO-ORDER VALIDATION
 // ========================================
 //
 // PRUEBA TEMPORAL.
 //
-// Esta prueba valida un producto MADE_TO_ORDER.
-//
-// IMPORTANTE:
-//
-// Esta prueba NO descuenta inventario.
-// NO crea orders.
-// NO crea inventoryMovements.
-// NO crea productionOrders.
-// NO modifica Firestore.
-//
-// Producto de prueba:
+// Producto:
 //
 // productId:
 // SmjUsBZJgrinlXAg50CP
@@ -443,9 +440,6 @@ window.testPhysicalOrderValidation =
 //
 // quantity:
 // 1
-//
-// fulfillment:
-// made_to_order
 // ========================================
 
 window.testMadeToOrderValidation =
@@ -463,10 +457,6 @@ window.testMadeToOrderValidation =
             "========================================"
         );
 
-
-        // ====================================
-        // 1. OBTENER USUARIO ACTUAL
-        // ====================================
 
         const user =
             auth.currentUser;
@@ -498,7 +488,7 @@ window.testMadeToOrderValidation =
         try {
 
             // ====================================
-            // 2. OBTENER FIREBASE ID TOKEN
+            // 1. FIREBASE ID TOKEN
             // ====================================
 
             const idToken =
@@ -522,7 +512,7 @@ window.testMadeToOrderValidation =
 
 
             // ====================================
-            // 3. PREPARAR REQUEST
+            // 2. REQUEST
             // ====================================
 
             const requestBody = {
@@ -557,7 +547,7 @@ window.testMadeToOrderValidation =
 
 
             // ====================================
-            // 4. LLAMAR CLOUDFLARE
+            // 3. LLAMAR CLOUDFLARE
             // ====================================
 
             const response =
@@ -594,7 +584,7 @@ window.testMadeToOrderValidation =
 
 
             // ====================================
-            // 5. LEER RESPUESTA
+            // 4. RESPONSE
             // ====================================
 
             let result =
@@ -614,10 +604,6 @@ window.testMadeToOrderValidation =
 
             }
 
-
-            // ====================================
-            // 6. MOSTRAR RESULTADO
-            // ====================================
 
             if (!response.ok) {
 
@@ -658,20 +644,9 @@ window.testMadeToOrderValidation =
 //
 // PRUEBA TEMPORAL — ESCRITURA REAL.
 //
-// IMPORTANTE:
+// Esta prueba CREARÁ una orden real.
 //
-// Esta prueba CREARÁ un documento real en:
-// orders/{orderId}
-//
-// NO descuenta inventory.
-// NO crea inventoryMovements.
-// NO crea productionOrders.
-// NO procesa pagos.
-//
-// El Worker vuelve a validar todo antes
-// de crear el pedido.
-//
-// Producto físico de prueba:
+// Producto físico:
 //
 // productId:
 // 2cHYZVhC6upYsq6xE7H5
@@ -895,7 +870,6 @@ observeAuth(async (user) => {
             const profile =
                 await getCurrentUserProfile();
 
-
         } catch (error) {
 
             console.error(
@@ -909,33 +883,8 @@ observeAuth(async (user) => {
         // ====================================
         // TEMPORARY BACKEND TEST
         // ====================================
-        //
-        // Firebase Auth
-        // ↓
-        // ID Token
-        // ↓
-        // Cloudflare
-        // ↓
-        // Firestore READ ONLY
-        //
-        // IMPORTANTE:
-        //
-        // Esta llamada solamente se ejecuta
-        // mientras hacemos esta prueba.
-        //
-        // No modifica:
-        //
-        // products
-        // inventory
-        // orders
-        // customers
-        // inventoryMovements
-        //
-        // ====================================
 
         await testOutsiderFirestore();
-
-    } else {
 
     }
 
@@ -944,7 +893,9 @@ observeAuth(async (user) => {
     // FIREBASE TERMINÓ DE RESTAURAR AUTH
     // ====================================
 
-    router();
+    await router();
+
+    hideAppLoader();
 
 });
 
@@ -952,24 +903,16 @@ observeAuth(async (user) => {
 // ========================================
 // INITIAL APP
 // ========================================
+//
+// El contenido real lo controla router().
+// No dejamos aquí la pantalla provisional
+// "Sistema iniciado correctamente."
+// ========================================
 
 const app =
     document.querySelector(
         "#app"
     );
-
-
-app.innerHTML = `
-
-    <h1>
-        OUTSIDER
-    </h1>
-
-    <p>
-        Sistema iniciado correctamente.
-    </p>
-
-`;
 
 
 // ========================================
@@ -987,7 +930,6 @@ async function testFirestore() {
 
         const categories =
             await getCategories();
-
 
     } catch (error) {
 
@@ -1008,7 +950,6 @@ async function testFirestore() {
         const products =
             await getProducts();
 
-
     } catch (error) {
 
         console.error(
@@ -1027,7 +968,6 @@ async function testFirestore() {
 
         const customers =
             await getCustomers();
-
 
     } catch (error) {
 
@@ -1048,7 +988,6 @@ async function testFirestore() {
         const orders =
             await getOrders();
 
-
     } catch (error) {
 
         console.error(
@@ -1067,7 +1006,6 @@ async function testFirestore() {
 
         const inventory =
             await getInventory();
-
 
     } catch (error) {
 
@@ -1088,7 +1026,6 @@ async function testFirestore() {
         const inventoryMovements =
             await getInventoryMovements();
 
-
     } catch (error) {
 
         console.error(
@@ -1107,7 +1044,6 @@ async function testFirestore() {
 
         const productionOrders =
             await getProductionOrders();
-
 
     } catch (error) {
 

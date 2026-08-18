@@ -12273,4 +12273,125 @@ body.customer-menu-open {
   display: none !important;
 }
 
+.app-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 250ms ease, visibility 250ms ease;
+}
+
+.app-loader.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.app-loader__svg {
+  width: 72px;
+  height: 72px;
+  display: block;
+}
+
+.customer-not-found {
+  min-height: calc(100vh - 88px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px;
+  background: #f7f7f5;
+  color: #111111;
+}
+
+.customer-not-found__content {
+  width: min(680px, 100%);
+  text-align: center;
+}
+
+.customer-not-found__code {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  font-size: clamp(96px, 18vw, 180px);
+  line-height: 0.85;
+  font-weight: 600;
+  letter-spacing: -0.08em;
+  color: #000000;
+}
+
+.customer-not-found__title {
+  margin: 32px 0 8px;
+  font-family: "Poppins", sans-serif;
+  font-size: clamp(24px, 4vw, 36px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+
+.customer-not-found__message {
+  max-width: 480px;
+  margin: 0 auto;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.customer-not-found__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  margin-top: 32px;
+  padding: 0 32px;
+  border: 1px solid #000000;
+  border-radius: 14px;
+  background: #000000;
+  color: #ffffff;
+  font-family: "Poppins", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.customer-not-found__action:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.customer-not-found__action:active {
+  transform: translateY(0);
+}
+
+.customer-not-found__action:focus-visible {
+  outline: 3px solid rgba(124, 58, 237, 0.25);
+  outline-offset: 3px;
+}
+
+@media (max-width: 560px) {
+  .customer-not-found {
+    min-height: calc(100vh - 76px);
+    padding: 32px 16px;
+  }
+  .customer-not-found__code {
+    font-size: clamp(88px, 28vw, 130px);
+  }
+  .customer-not-found__title {
+    margin-top: 24px;
+    font-size: 24px;
+  }
+  .customer-not-found__message {
+    font-size: 13px;
+  }
+  .customer-not-found__action {
+    width: 100%;
+    max-width: 320px;
+  }
+}
+
 /*# sourceMappingURL=main.css.map */

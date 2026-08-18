@@ -128,7 +128,55 @@ const routes = {
 
 };
 
+// ========================================
+// PAGE TITLES
+// ========================================
 
+const pageTitles = {
+
+    "/":
+        "OUTSIDER",
+
+    "/shop":
+        "Shop — OUTSIDER",
+
+    "/product":
+        "Producto — OUTSIDER",
+
+    "/cart":
+        "Carrito — OUTSIDER",
+
+    "/account":
+        "Mi cuenta — OUTSIDER",
+
+    "/checkout":
+        "Checkout — OUTSIDER",
+
+    "/payment":
+        "Payment — OUTSIDER",
+
+    "/enterprise/login":
+        "Enterprise — OUTSIDER",
+
+    "/enterprise/dashboard":
+        "Dashboard — OUTSIDER",
+
+    "/enterprise/production":
+        "Producción — OUTSIDER",
+
+    "/enterprise/orders":
+        "Pedidos — OUTSIDER",
+
+    "/enterprise/products":
+        "Productos — OUTSIDER",
+
+    "/enterprise/inventory":
+        "Inventario — OUTSIDER",
+
+    "/enterprise/customers":
+        "Clientes — OUTSIDER"
+
+};
 // ========================================
 // NAVIGATION
 // ========================================
@@ -157,7 +205,14 @@ export async function router() {
     const path =
         window.location.pathname;
 
+    // ========================================
+// DOCUMENT TITLE
+// ========================================
 
+document.title =
+    pageTitles[path] ||
+    "OUTSIDER";
+    
     const route =
         routes[path];
 
@@ -182,24 +237,55 @@ export async function router() {
     // ========================================
     // ROUTE NOT FOUND
     // ========================================
+if (!route) {
 
-    if (!route) {
+    app.innerHTML = `
 
-        app.innerHTML = `
+        <main
+            class="customer-not-found"
+            aria-labelledby="not-found-title"
+        >
 
-            <h1>
-                404
-            </h1>
+            <div class="customer-not-found__content">
 
-            <p>
-                Página no encontrada.
-            </p>
+                <p
+                    class="customer-not-found__code"
+                    aria-hidden="true"
+                >
+                    404
+                </p>
 
-        `;
+                <h1
+                    id="not-found-title"
+                    class="customer-not-found__title"
+                >
+                    Página no encontrada
+                </h1>
 
-        return;
+                <p
+                    class="customer-not-found__message"
+                >
+                    La página que buscas no existe,
+                    fue movida o ya no está disponible.
+                </p>
 
-    }
+                <a
+                    href="/"
+                    class="customer-not-found__action"
+                    data-link
+                >
+                    VOLVER AL INICIO
+                </a>
+
+            </div>
+
+        </main>
+
+    `;
+
+    return;
+
+}
 
 
     // ========================================

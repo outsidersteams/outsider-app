@@ -23,4 +23,6 @@
 @use "./customer/account";
 @use "./customer/checkout";
 @use "./customer/payment";
+@use "base/appLoader";
+@use "base/notFound";
 //@use "customer/navigation";
