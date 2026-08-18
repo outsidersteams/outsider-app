@@ -6,10 +6,10 @@ import {
     login,
     register,
     loginWithGoogle,
-    getCurrentAuthUser,
     observeAuth,
     logout
 } from "../firebase/auth.js";
+
 import {
     ensureCustomerAccount
 } from "../firebase/userService.js";
@@ -109,8 +109,6 @@ export function initCustomerAccount() {
         );
 
 
-    // Guardamos la referencia por si posteriormente
-    // queremos desmontar la vista correctamente.
     container.dataset.authObserver =
         "active";
 
@@ -451,6 +449,8 @@ function renderAuthenticatedState(
 
         <div class="customer-account__profile">
 
+            <!-- PROFILE -->
+
             <div class="customer-account__profile-header">
 
                 ${
@@ -471,7 +471,7 @@ function renderAuthenticatedState(
                         `
                 }
 
-                <div>
+                <div class="customer-account__profile-info">
 
                     <h2 class="customer-account__profile-name">
                         ${escapeHtml(displayName)}
@@ -485,6 +485,155 @@ function renderAuthenticatedState(
 
             </div>
 
+
+            <!-- CUSTOMER NAVIGATION -->
+
+            <nav
+                class="customer-account__navigation"
+                aria-label="Navegación de cuenta"
+            >
+
+                <p class="customer-account__navigation-label">
+                    NAVEGAR
+                </p>
+
+
+                <!-- HOME -->
+
+                <button
+                    type="button"
+                    class="customer-account__navigation-item"
+                    data-account-navigation="/"
+                >
+
+                    <span class="customer-account__navigation-icon">
+                        <svg
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                        >
+                            <path
+                                d="M3 10.5 12 3l9 7.5"
+                            />
+                            <path
+                                d="M5.5 9.5V21h13V9.5"
+                            />
+                            <path
+                                d="M9.5 21v-6h5v6"
+                            />
+                        </svg>
+                    </span>
+
+                    <span class="customer-account__navigation-content">
+
+                        <span class="customer-account__navigation-title">
+                            Inicio
+                        </span>
+
+                        <span class="customer-account__navigation-description">
+                            Regresa al inicio de OUTSIDER
+                        </span>
+
+                    </span>
+
+                    <span class="customer-account__navigation-arrow">
+                        →
+                    </span>
+
+                </button>
+
+
+                <!-- SHOP -->
+
+                <button
+                    type="button"
+                    class="customer-account__navigation-item"
+                    data-account-navigation="/shop"
+                >
+
+                    <span class="customer-account__navigation-icon">
+                        <svg
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                        >
+                            <path
+                                d="M5 8h14l1 12H4L5 8Z"
+                            />
+                            <path
+                                d="M8 8a4 4 0 0 1 8 0"
+                            />
+                        </svg>
+                    </span>
+
+                    <span class="customer-account__navigation-content">
+
+                        <span class="customer-account__navigation-title">
+                            Tienda
+                        </span>
+
+                        <span class="customer-account__navigation-description">
+                            Explora nuestros productos
+                        </span>
+
+                    </span>
+
+                    <span class="customer-account__navigation-arrow">
+                        →
+                    </span>
+
+                </button>
+
+
+                <!-- CART -->
+
+                <button
+                    type="button"
+                    class="customer-account__navigation-item"
+                    data-account-navigation="/cart"
+                >
+
+                    <span class="customer-account__navigation-icon">
+                        <svg
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                        >
+                            <path
+                                d="M4 5h2l1.5 10h10L20 8H7"
+                            />
+                            <circle
+                                cx="9"
+                                cy="19"
+                                r="1.25"
+                            />
+                            <circle
+                                cx="17"
+                                cy="19"
+                                r="1.25"
+                            />
+                        </svg>
+                    </span>
+
+                    <span class="customer-account__navigation-content">
+
+                        <span class="customer-account__navigation-title">
+                            Mi carrito
+                        </span>
+
+                        <span class="customer-account__navigation-description">
+                            Revisa los productos que agregaste
+                        </span>
+
+                    </span>
+
+                    <span class="customer-account__navigation-arrow">
+                        →
+                    </span>
+
+                </button>
+
+            </nav>
+
+
+            <!-- LOGOUT -->
 
             <div class="customer-account__profile-actions">
 
@@ -503,8 +652,58 @@ function renderAuthenticatedState(
     `;
 
 
+    // ========================================
+    // NAVIGATION EVENTS
+    // ========================================
+
+    const navigationButtons =
+        container.querySelectorAll(
+            "[data-account-navigation]"
+        );
+
+
+    navigationButtons.forEach(
+        (button) => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    const path =
+                        button.dataset.accountNavigation;
+
+
+                    if (!path) {
+                        return;
+                    }
+
+
+                    window.history.pushState(
+                        {},
+                        "",
+                        path
+                    );
+
+
+                    window.dispatchEvent(
+                        new PopStateEvent(
+                            "popstate"
+                        )
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+    // ========================================
+    // LOGOUT
+    // ========================================
+
     const logoutButton =
-        document.querySelector(
+        container.querySelector(
             "#customer-logout"
         );
 
@@ -618,6 +817,7 @@ function bindLoginEvents(container) {
 
 
                 submitButton.disabled = true;
+
                 submitButton.textContent =
                     "Iniciando sesión...";
 
@@ -629,6 +829,7 @@ function bindLoginEvents(container) {
                             email,
                             password
                         );
+
 
                     await ensureCustomerAccount(
                         user
@@ -652,6 +853,7 @@ function bindLoginEvents(container) {
 
 
                     submitButton.disabled = false;
+
                     submitButton.textContent =
                         "Iniciar sesión";
 
@@ -684,6 +886,7 @@ function bindLoginEvents(container) {
                     const user =
                         await loginWithGoogle();
 
+
                     await ensureCustomerAccount(
                         user
                     );
@@ -697,6 +900,7 @@ function bindLoginEvents(container) {
 
 
                     googleButton.disabled = false;
+
 
                     googleButton.innerHTML = `
 
@@ -831,6 +1035,7 @@ function bindRegisterEvents(container) {
 
 
                 submitButton.disabled = true;
+
                 submitButton.textContent =
                     "Creando cuenta...";
 
@@ -866,8 +1071,6 @@ function bindRegisterEvents(container) {
                     );
 
 
-                    // El Customer ya fue creado, vinculado o recuperado.
-
                 } catch (authError) {
 
                     console.error(
@@ -886,6 +1089,7 @@ function bindRegisterEvents(container) {
 
 
                     submitButton.disabled = false;
+
                     submitButton.textContent =
                         "Crear cuenta";
 
@@ -918,6 +1122,7 @@ function bindRegisterEvents(container) {
                     const user =
                         await loginWithGoogle();
 
+
                     await ensureCustomerAccount(
                         user
                     );
@@ -931,6 +1136,7 @@ function bindRegisterEvents(container) {
 
 
                     googleButton.disabled = false;
+
 
                     googleButton.innerHTML = `
 
@@ -1039,42 +1245,32 @@ function getAuthErrorMessage(error) {
         case "auth/invalid-email":
             return "El correo electrónico no es válido.";
 
-
         case "auth/user-not-found":
             return "No existe una cuenta con este correo.";
-
 
         case "auth/wrong-password":
             return "La contraseña es incorrecta.";
 
-
         case "auth/invalid-credential":
             return "El correo o la contraseña son incorrectos.";
-
 
         case "auth/email-already-in-use":
             return "Ya existe una cuenta con este correo.";
 
-
         case "auth/weak-password":
             return "La contraseña debe tener al menos 6 caracteres.";
-
 
         case "auth/popup-closed-by-user":
             return "El inicio de sesión con Google fue cancelado.";
 
-
         case "auth/popup-blocked":
             return "El navegador bloqueó la ventana de Google. Permite las ventanas emergentes e inténtalo nuevamente.";
-
 
         case "auth/account-exists-with-different-credential":
             return "Ya existe una cuenta con este correo utilizando otro método de acceso.";
 
-
         case "auth/network-request-failed":
             return "No se pudo conectar con Firebase. Revisa tu conexión.";
-
 
         default:
             return "No pudimos completar la autenticación. Inténtalo nuevamente.";

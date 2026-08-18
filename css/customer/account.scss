@@ -1,10 +1,12 @@
 @use "../base/variables" as *;
 
+
 // ========================================
 // OUTSIDER — CUSTOMER ACCOUNT
 // ========================================
 
 .customer-account {
+
     min-height: 100dvh;
     box-sizing: border-box;
 
@@ -21,9 +23,12 @@
 
 
     &__container {
+
         width: 100%;
         max-width: 520px;
+
         margin: 0 auto;
+
     }
 
 
@@ -32,47 +37,67 @@
     // ========================================
 
     &__header {
+
         margin-bottom: $space-lg;
+
         text-align: center;
+
     }
 
+
     &__eyebrow {
-        margin: 0 0 $space-xs;
+
+        margin:
+            0
+            0
+            $space-xs;
 
         color: $color-text-muted;
 
         font-family: $font-poppins;
+
         font-size: 10px;
         font-weight: 500;
+
         letter-spacing: .18em;
+
         line-height: 1;
+
         text-transform: uppercase;
+
     }
 
+
     &__title {
+
         width: min(190px, 52vw);
         height: auto;
 
         margin: 0 auto;
 
-        // The semantic "Mi cuenta" title remains in the HTML,
-        // but the visual heading is the OUTSIDER logo.
         font-size: 0;
         line-height: 0;
 
+
         &::before {
+
             content: "";
 
             display: block;
 
             width: 100%;
+
             aspect-ratio: 3.35 / 1;
 
-            background-image: url("/assets/outsider-logo-black.svg");
+            background-image:
+                url("/assets/outsider-logo-black.svg");
+
             background-position: center;
             background-repeat: no-repeat;
             background-size: contain;
+
         }
+
     }
 
 
@@ -81,18 +106,26 @@
     // ========================================
 
     &__content {
+
         width: 100%;
 
+
         > p {
+
             margin: 0;
+
             padding: $space-lg;
 
             color: $color-text-muted;
 
             font-family: $font-primary;
+
             font-size: 13px;
+
             text-align: center;
+
         }
+
     }
 
 
@@ -101,7 +134,9 @@
     // ========================================
 
     &__auth {
+
         width: 100%;
+
         box-sizing: border-box;
 
         padding:
@@ -110,56 +145,79 @@
 
         background: $color-white;
 
-        border: 1px solid $border-color;
+        border:
+            1px
+            solid
+            $border-color;
+
         border-radius: $radius-md;
 
         box-shadow:
-            0 14px 36px rgba(0, 0, 0, .045);
+            0
+            14px
+            36px
+            rgba(0, 0, 0, .045);
+
     }
 
 
     &__auth-title {
-        margin: 0 0 $space-xs;
+
+        margin:
+            0
+            0
+            $space-xs;
 
         color: $color-black;
 
         font-family: $font-primary;
+
         font-size: 23px;
+
         font-weight: 600;
+
         letter-spacing: -.025em;
+
         line-height: 1.15;
+
     }
 
 
     &__auth-description {
-        margin: 0 0 $space-lg;
+
+        margin:
+            0
+            0
+            $space-lg;
 
         color: $color-text-muted;
 
         font-family: $font-primary;
+
         font-size: 13px;
+
         line-height: 1.5;
+
     }
 
 
     // ========================================
     // GOOGLE — DISABLED FOR NOW
     // ========================================
-    //
-    // The buttons remain in account.js so Google
-    // can be reactivated later without rebuilding
-    // the authentication structure.
-    //
 
     &__google-button,
     #customer-google-login,
     #customer-google-register {
+
         display: none !important;
+
     }
 
 
     &__separator {
+
         display: none !important;
+
     }
 
 
@@ -168,33 +226,49 @@
     // ========================================
 
     &__form {
+
         display: flex;
+
         flex-direction: column;
+
         gap: $space-md;
+
     }
 
 
     &__field {
+
         display: flex;
+
         flex-direction: column;
+
         gap: $space-xs;
+
     }
 
 
     &__label {
+
         color: $color-text;
 
         font-family: $font-poppins;
+
         font-size: 10px;
+
         font-weight: 500;
+
         letter-spacing: .06em;
+
         text-transform: uppercase;
+
     }
 
 
     &__input {
+
         width: 100%;
         min-height: 46px;
+
         box-sizing: border-box;
 
         padding:
@@ -202,14 +276,20 @@
             14px;
 
         background: $color-white;
+
         color: $color-text;
 
-        border: 1px solid $border-color;
+        border:
+            1px
+            solid
+            $border-color;
+
         border-radius: $radius-sm;
 
         outline: none;
 
         font-family: $font-primary;
+
         font-size: 14px;
 
         transition:
@@ -219,28 +299,47 @@
 
 
         &::placeholder {
+
             color: $color-text-muted;
+
             opacity: .65;
+
         }
 
 
         &:hover {
-            border-color: darken($border-color, 8%);
+
+            border-color:
+                darken(
+                    $border-color,
+                    8%
+                );
+
         }
 
 
         &:focus {
+
             border-color: $color-black;
 
             box-shadow:
-                0 0 0 3px rgba(0, 0, 0, .06);
+                0
+                0
+                0
+                3px
+                rgba(0, 0, 0, .06);
+
         }
 
 
         &:disabled {
+
             background: $color-surface;
+
             cursor: not-allowed;
+
         }
+
     }
 
 
@@ -249,24 +348,35 @@
     // ========================================
 
     &__submit {
+
         width: 100%;
         min-height: 48px;
 
         margin-top: 0;
+
         padding:
             12px
             $space-lg;
 
         background: $color-black;
+
         color: $color-white;
 
-        border: 1px solid $color-black;
+        border:
+            1px
+            solid
+            $color-black;
+
         border-radius: $radius-sm;
 
         font-family: $font-poppins;
+
         font-size: 11px;
+
         font-weight: 500;
+
         letter-spacing: .12em;
+
         text-transform: uppercase;
 
         cursor: pointer;
@@ -278,21 +388,33 @@
 
 
         &:hover {
+
             background: $color-text;
-            transform: translateY(-1px);
+
+            transform:
+                translateY(-1px);
+
         }
 
 
         &:active {
-            transform: translateY(0);
+
+            transform:
+                translateY(0);
+
         }
 
 
         &:disabled {
+
             opacity: .55;
+
             cursor: wait;
+
             transform: none;
+
         }
+
     }
 
 
@@ -301,27 +423,48 @@
     // ========================================
 
     &__error {
+
         margin: 0;
 
         padding:
             $space-sm
             $space-md;
 
-        background: rgba(239, 68, 68, .06);
+        background:
+            rgba(
+                239,
+                68,
+                68,
+                .06
+            );
 
-        border: 1px solid rgba(239, 68, 68, .20);
+        border:
+            1px
+            solid
+            rgba(
+                239,
+                68,
+                68,
+                .20
+            );
+
         border-radius: $radius-sm;
 
         color: $color-danger;
 
         font-family: $font-primary;
+
         font-size: 13px;
+
         line-height: 1.5;
 
 
         &[hidden] {
+
             display: none;
+
         }
+
     }
 
 
@@ -330,51 +473,73 @@
     // ========================================
 
     &__register {
+
         display: flex;
+
         align-items: center;
+
         justify-content: center;
+
         gap: $space-xs;
 
         margin-top: $space-lg;
+
         padding-top: $space-md;
 
-        border-top: 1px solid $border-color;
+        border-top:
+            1px
+            solid
+            $border-color;
 
         text-align: center;
 
 
         p {
+
             margin: 0;
 
             color: $color-text-muted;
 
             font-family: $font-primary;
+
             font-size: 12px;
+
         }
+
     }
 
 
     &__link {
+
         padding: 0;
 
         background: transparent;
+
         color: $color-text;
 
         border: 0;
 
         font-family: $font-primary;
+
         font-size: 12px;
+
         font-weight: 600;
 
         text-decoration: underline;
+
         text-decoration-thickness: 1px;
+
         text-underline-offset: 3px;
 
         cursor: pointer;
 
+
         &:hover {
+
             opacity: .55;
+
         }
+
     }
 
 
@@ -383,7 +548,9 @@
     // ========================================
 
     &__profile {
+
         width: 100%;
+
         box-sizing: border-box;
 
         padding:
@@ -392,33 +559,60 @@
 
         background: $color-white;
 
-        border: 1px solid $border-color;
+        border:
+            1px
+            solid
+            $border-color;
+
         border-radius: $radius-md;
 
         box-shadow:
-            0 14px 36px rgba(0, 0, 0, .045);
+            0
+            14px
+            36px
+            rgba(0, 0, 0, .045);
+
     }
 
 
     &__profile-header {
+
         display: flex;
+
         align-items: center;
+
         gap: $space-md;
 
         padding-bottom: $space-lg;
 
-        border-bottom: 1px solid $border-color;
+        border-bottom:
+            1px
+            solid
+            $border-color;
+
+    }
+
+
+    &__profile-info {
+
+        min-width: 0;
+
+        flex: 1;
+
     }
 
 
     &__avatar {
+
         width: 56px;
         height: 56px;
 
         flex: 0 0 56px;
 
         display: flex;
+
         align-items: center;
+
         justify-content: center;
 
         object-fit: cover;
@@ -426,53 +620,305 @@
         border-radius: 50%;
 
         background: $color-surface;
+
         color: $color-text;
 
         font-family: $font-primary;
+
         font-size: 19px;
+
         font-weight: 600;
 
 
         &--placeholder {
-            border: 1px solid $border-color;
+
+            border:
+                1px
+                solid
+                $border-color;
+
         }
+
     }
 
 
     &__profile-name {
-        margin: 0 0 $space-xs;
+
+        margin:
+            0
+            0
+            $space-xs;
 
         color: $color-black;
 
         font-family: $font-primary;
+
         font-size: 19px;
+
         font-weight: 600;
+
         letter-spacing: -.025em;
+
     }
 
 
     &__profile-email {
+
         margin: 0;
 
         color: $color-text-muted;
 
         font-family: $font-primary;
+
         font-size: 12px;
+
         line-height: 1.4;
 
         overflow-wrap: anywhere;
+
     }
 
 
-    &__profile-actions {
+    // ========================================
+    // CUSTOMER NAVIGATION
+    // ========================================
+
+    &__navigation {
+
+        padding:
+            $space-lg
+            0;
+
+    }
+
+
+    &__navigation-label {
+
+        margin:
+            0
+            $space-sm;
+
+        color: $color-text-muted;
+
+        font-family: $font-poppins;
+
+        font-size: 9px;
+
+        font-weight: 500;
+
+        letter-spacing: .16em;
+
+        line-height: 1;
+
+        text-transform: uppercase;
+
+    }
+
+
+    &__navigation-item {
+
+        width: 100%;
+
+        min-height: 68px;
+
         display: flex;
+
+        align-items: center;
+
+        gap: $space-md;
+
+        box-sizing: border-box;
+
+        padding:
+            10px
+            8px;
+
+        background: transparent;
+
+        color: $color-text;
+
+        border: 0;
+
+        border-radius: $radius-sm;
+
+        text-align: left;
+
+        cursor: pointer;
+
+        transition:
+            background-color 160ms ease,
+            transform 160ms ease;
+
+
+        &:hover {
+
+            background:
+                $color-surface;
+
+        }
+
+
+        &:active {
+
+            transform:
+                scale(.99);
+
+        }
+
+
+        &:focus-visible {
+
+            outline:
+                2px
+                solid
+                $color-black;
+
+            outline-offset: 2px;
+
+        }
+
+    }
+
+
+    &__navigation-icon {
+
+        width: 42px;
+        height: 42px;
+
+        flex: 0 0 42px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        background: $color-surface;
+
+        border:
+            1px
+            solid
+            $border-color;
+
+        border-radius: $radius-sm;
+
+
+        svg {
+
+            width: 19px;
+            height: 19px;
+
+            fill: none;
+
+            stroke:
+                currentColor;
+
+            stroke-width: 1.7;
+
+            stroke-linecap: round;
+
+            stroke-linejoin: round;
+
+        }
+
+    }
+
+
+    &__navigation-content {
+
+        min-width: 0;
+
+        flex: 1;
+
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 2px;
+
+    }
+
+
+    &__navigation-title {
+
+        color: $color-black;
+
+        font-family: $font-primary;
+
+        font-size: 14px;
+
+        font-weight: 600;
+
+        line-height: 1.25;
+
+    }
+
+
+    &__navigation-description {
+
+        color: $color-text-muted;
+
+        font-family: $font-primary;
+
+        font-size: 11px;
+
+        line-height: 1.35;
+
+    }
+
+
+    &__navigation-arrow {
+
+        flex: 0 0 auto;
+
+        color: $color-text-muted;
+
+        font-family: $font-primary;
+
+        font-size: 18px;
+
+        line-height: 1;
+
+        transition:
+            transform 160ms ease,
+            color 160ms ease;
+
+    }
+
+
+    &__navigation-item:hover
+    &__navigation-arrow {
+
+        color: $color-black;
+
+        transform:
+            translateX(3px);
+
+    }
+
+
+    // ========================================
+    // PROFILE ACTIONS
+    // ========================================
+
+    &__profile-actions {
+
+        display: flex;
+
         justify-content: flex-end;
 
         padding-top: $space-md;
+
+        border-top:
+            1px
+            solid
+            $border-color;
+
     }
 
 
     &__logout {
+
         min-height: 40px;
 
         padding:
@@ -480,15 +926,24 @@
             $space-md;
 
         background: transparent;
+
         color: $color-text;
 
-        border: 1px solid $border-color;
+        border:
+            1px
+            solid
+            $border-color;
+
         border-radius: $radius-sm;
 
         font-family: $font-poppins;
+
         font-size: 10px;
+
         font-weight: 500;
+
         letter-spacing: .08em;
+
         text-transform: uppercase;
 
         cursor: pointer;
@@ -500,16 +955,25 @@
 
 
         &:hover {
+
             background: $color-black;
+
             color: $color-white;
-            border-color: $color-black;
+
+            border-color:
+                $color-black;
+
         }
 
 
         &:disabled {
+
             opacity: .5;
+
             cursor: wait;
+
         }
+
     }
 
 
@@ -523,10 +987,18 @@
     &__input {
 
         &:focus-visible {
-            outline: 2px solid $color-black;
+
+            outline:
+                2px
+                solid
+                $color-black;
+
             outline-offset: 3px;
+
         }
+
     }
+
 }
 
 
@@ -537,6 +1009,7 @@
 @media (max-width: 640px) {
 
     .customer-account {
+
         min-height: 100dvh;
 
         padding:
@@ -545,61 +1018,129 @@
 
 
         &__container {
+
             max-width: 480px;
+
         }
 
 
         &__header {
-            margin-bottom: $space-md;
+
+            margin-bottom:
+                $space-md;
+
         }
 
 
         &__title {
-            width: min(170px, 58vw);
+
+            width:
+                min(
+                    170px,
+                    58vw
+                );
+
         }
 
 
         &__auth,
         &__profile {
-            padding: $space-lg;
+
+            padding:
+                $space-lg;
+
         }
 
 
         &__auth-title {
+
             font-size: 21px;
+
         }
 
 
         &__auth-description {
-            margin-bottom: $space-md;
+
+            margin-bottom:
+                $space-md;
+
         }
 
 
         &__form {
-            gap: $space-md;
+
+            gap:
+                $space-md;
+
         }
 
 
         &__profile-header {
+
             align-items: flex-start;
+
         }
 
 
         &__profile-actions {
-            justify-content: stretch;
+
+            justify-content:
+                stretch;
+
         }
 
 
         &__logout {
+
             width: 100%;
+
         }
 
 
         &__register {
+
             flex-direction: column;
-            gap: $space-xs;
+
+            gap:
+                $space-xs;
+
         }
+
+
+        &__navigation {
+
+            padding:
+                $space-md
+                0;
+
+        }
+
+
+        &__navigation-item {
+
+            min-height: 64px;
+
+        }
+
+
+        &__navigation-icon {
+
+            width: 40px;
+            height: 40px;
+
+            flex-basis: 40px;
+
+        }
+
+
+        &__navigation-description {
+
+            font-size: 10px;
+
+        }
+
     }
+
 }
 
 
@@ -614,8 +1155,14 @@
         &__input,
         &__submit,
         &__link,
-        &__logout {
+        &__logout,
+        &__navigation-item,
+        &__navigation-arrow {
+
             transition: none;
+
         }
+
     }
+
 }
