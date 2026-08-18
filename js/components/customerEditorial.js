@@ -1,8 +1,8 @@
 const CUSTOMER_EDITORIAL = {
     images: {
         mobile: "/assets/image-colab.png",
-        tablet: "/assets/customer/home/editorial-tablet.jpg",
-        desktop: "/assets/customer/home/editorial-desktop.jpg"
+        tablet: "/assets/image-colab-tablet.png",
+        desktop: "/assets/image-colab-desktop.png"
     },
 
     logos: {
