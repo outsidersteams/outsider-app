@@ -455,6 +455,11 @@ async function renderInventoryList(
 
 let newInventoryProducts = [];
 
+// Producto seleccionado explícitamente durante el flujo.
+// Se conserva para no intentar resolverlo por variant.id,
+// ya que los IDs de variantes pueden repetirse entre productos.
+let newInventorySelectedProduct = null;
+
 
 function initNewInventoryFlow() {
 
@@ -928,6 +933,9 @@ function selectNewInventoryProduct(
     product
 ) {
 
+    // Conservar el producto exacto seleccionado por el usuario.
+    newInventorySelectedProduct = product;
+
     const container =
         document.querySelector(
             "#enterprise-inventory-content"
@@ -1289,7 +1297,10 @@ function renderNewInventoryVariantResults(
                                 <button
                                     type="button"
                                     class="enterprise-inventory__card-action"
-                                    data-select-variant-index="${index}"
+                                    data-select-variant-id="${escapeInventoryHTML(
+                                        variant?.id ||
+                                        `variant-${index}`
+                                    )}"
                                     ${active ? "" : "disabled"}
                                 >
                                     ${
@@ -1323,7 +1334,7 @@ function renderNewInventoryVariantResults(
 
         const button =
             event.target.closest(
-                "[data-select-variant-index]"
+                "[data-select-variant-id]"
             );
 
         if (!button) {
@@ -1334,31 +1345,27 @@ function renderNewInventoryVariantResults(
             return;
         }
 
-        const index =
-            Number(
-                button.dataset
-                    .selectVariantIndex
-            );
+        const variantId =
+            button.dataset.selectVariantId;
 
-        if (
-            !Number.isInteger(index) ||
-            index < 0 ||
-            index >= variants.length
-        ) {
+        if (!variantId) {
             console.error(
-                "Índice de variante inválido:",
-                index
+                "La variante seleccionada no tiene ID."
             );
             return;
         }
 
         const variant =
-            variants[index];
+            variants.find(
+                item =>
+                    String(item?.id) ===
+                    String(variantId)
+            );
 
         if (!variant) {
             console.error(
                 "No se encontró la variante seleccionada:",
-                index
+                variantId
             );
             return;
         }
@@ -1534,18 +1541,11 @@ function renderNewInventorySizeSelector(
         params.get("product");
 
 
-    // El producto se conserva en memoria durante el flujo
-    // porque esta vista se construye desde el selector anterior.
+    // Usamos el producto que el usuario seleccionó explícitamente.
+    // No buscamos por variant.id entre todos los productos porque
+    // una misma variante puede existir en varios productos.
     const selectedProduct =
-        newInventoryProducts.find(
-            product =>
-                Array.isArray(product?.variants) &&
-                product.variants.some(
-                    item =>
-                        String(item?.id) ===
-                        String(variant?.id)
-                )
-        );
+        newInventorySelectedProduct;
 
 
     const resolvedProductId =
@@ -1629,10 +1629,10 @@ function renderNewInventorySizeSelector(
             "click",
             () => {
 
-                if (selectedProduct) {
+                if (newInventorySelectedProduct) {
 
                     selectNewInventoryProduct(
-                        selectedProduct
+                        newInventorySelectedProduct
                     );
 
                 }
