@@ -209,3 +209,4 @@ module.exports = async function handler(req, res) {
     });
   }
 };
+console.log("success")
