@@ -13,28 +13,21 @@ function sendJson(res, status, payload) {
 }
 
 function safeText(value, max = 500) {
-  return typeof value === "string"
-    ? value.trim().slice(0, max)
-    : "";
+  return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
 
 function normalizeSearch(value) {
   return safeText(value, 1000)
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .toLocaleLowerCase("es")
-    .trim();
+    .toLocaleLowerCase("es");
 }
 
 function initializeFirebaseAdmin() {
-  if (admin.apps.length > 0) {
-    return admin.app();
-  }
+  if (admin.apps.length > 0) return admin.app();
 
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-
-  // Convierte los "\n" literales de Vercel en saltos de línea reales.
+  const projectId = process.env.FIREBASE_PROJECT_ID?.trim();
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL?.trim();
   const privateKey = process.env.FIREBASE_PRIVATE_KEY
     ?.replace(/\\n/g, "\n")
     .trim();
@@ -54,10 +47,30 @@ function initializeFirebaseAdmin() {
 }
 
 function isAuthorized(req) {
-  const expected = process.env.OUTSIDER_AI_API_KEY;
-  const supplied = req.headers.authorization || "";
+  const expected = process.env.OUTSIDER_AI_API_KEY?.trim();
+  const supplied = (req.headers.authorization || "").trim();
+  const bearerPrefix = "Bearer ";
 
-  return Boolean(expected) && supplied === `Bearer ${expected}`;
+  const hasExpectedKey = Boolean(expected);
+  const hasBearer = supplied.startsWith(bearerPrefix);
+  const suppliedKey = hasBearer
+    ? supplied.slice(bearerPrefix.length).trim()
+    : "";
+
+  const authorized =
+    hasExpectedKey &&
+    hasBearer &&
+    suppliedKey.length > 0 &&
+    suppliedKey === expected;
+
+  console.log("OUTSIDER AI auth diagnostic:", {
+    envKeyPresent: hasExpectedKey,
+    bearerReceived: hasBearer,
+    suppliedKeyPresent: Boolean(suppliedKey),
+    authorized: Boolean(authorized),
+  });
+
+  return Boolean(authorized);
 }
 
 function normalizePrice(value) {
@@ -71,7 +84,6 @@ function normalizePrice(value) {
   }
 
   const price = Number(value);
-
   return Number.isFinite(price) && price >= 0 ? price : null;
 }
 
@@ -81,15 +93,10 @@ function normalizeImage(image) {
     return url ? { url } : null;
   }
 
-  if (!image || typeof image !== "object") {
-    return null;
-  }
+  if (!image || typeof image !== "object") return null;
 
   const url = safeText(image.url || image.src || image.fileUrl, 1000);
-
-  if (!url) {
-    return null;
-  }
+  if (!url) return null;
 
   return {
     url,
@@ -98,9 +105,7 @@ function normalizeImage(image) {
 }
 
 function normalizeSize(size) {
-  if (!size || typeof size !== "object") {
-    return null;
-  }
+  if (!size || typeof size !== "object") return null;
 
   return {
     id: safeText(size.id, 100),
@@ -112,30 +117,21 @@ function normalizeSize(size) {
 }
 
 function normalizeVariant(variant) {
-  if (!variant || typeof variant !== "object") {
-    return null;
-  }
-
-  const sizes = Array.isArray(variant.sizes)
-    ? variant.sizes.map(normalizeSize).filter(Boolean)
-    : [];
-
-  const images = Array.isArray(variant.images)
-    ? variant.images.map(normalizeImage).filter(Boolean).slice(0, 10)
-    : [];
+  if (!variant || typeof variant !== "object") return null;
 
   return {
     id: safeText(variant.id, 100),
     name: safeText(
-      variant.name ||
-      variant.colorName ||
-      variant.color ||
-      variant.id,
+      variant.name || variant.colorName || variant.color || variant.id,
       120
     ),
     active: variant.active !== false,
-    images,
-    sizes,
+    images: Array.isArray(variant.images)
+      ? variant.images.map(normalizeImage).filter(Boolean).slice(0, 10)
+      : [],
+    sizes: Array.isArray(variant.sizes)
+      ? variant.sizes.map(normalizeSize).filter(Boolean)
+      : [],
   };
 }
 
@@ -152,27 +148,11 @@ function searchableText(product) {
     ...(Array.isArray(product.tags) ? product.tags : []),
   ];
 
-  const variants = Array.isArray(product.variants)
-    ? product.variants
-    : [];
+  for (const variant of Array.isArray(product.variants) ? product.variants : []) {
+    terms.push(variant?.id, variant?.name, variant?.color, variant?.colorName);
 
-  for (const variant of variants) {
-    terms.push(
-      variant?.id,
-      variant?.name,
-      variant?.color,
-      variant?.colorName
-    );
-
-    if (Array.isArray(variant?.sizes)) {
-      for (const size of variant.sizes) {
-        terms.push(
-          size?.id,
-          size?.name,
-          size?.label,
-          size?.sku
-        );
-      }
+    for (const size of Array.isArray(variant?.sizes) ? variant.sizes : []) {
+      terms.push(size?.id, size?.name, size?.label, size?.sku);
     }
   }
 
@@ -193,7 +173,7 @@ function publicProduct(product, id) {
     ? product.images.map(normalizeImage).filter(Boolean).slice(0, 10)
     : [];
 
-  const allSizes = variants.flatMap((variant) =>
+  const sizes = variants.flatMap((variant) =>
     variant.sizes
       .filter((size) => size.active)
       .map((size) => ({
@@ -203,7 +183,7 @@ function publicProduct(product, id) {
       }))
   );
 
-  const prices = allSizes
+  const prices = sizes
     .map((size) => size.price)
     .filter((price) => price !== null);
 
@@ -214,14 +194,12 @@ function publicProduct(product, id) {
     description: safeText(product.description, 3000),
     categoryId: safeText(product.categoryId, 120),
     categoryName: safeText(product.categoryName || product.category, 120),
-    active: product.active === true,
-    publishedOnWeb: product.publishedActive?.web === true,
     fulfillment: {
       type: safeText(product.fulfillment?.type, 80) || "physical",
     },
     images,
     variants,
-    sizes: allSizes,
+    sizes,
     priceRange: prices.length
       ? {
           min: Math.min(...prices),
@@ -256,10 +234,8 @@ module.exports = async function handler(req, res) {
   try {
     initializeFirebaseAdmin();
 
-    const db = admin.firestore();
-
-    // La búsqueda se limita a productos activos y publicados en la web.
-    const snapshot = await db
+    const snapshot = await admin
+      .firestore()
       .collection("products")
       .where("active", "==", true)
       .where("publishedActive.web", "==", true)
@@ -268,27 +244,19 @@ module.exports = async function handler(req, res) {
 
     const needle = normalizeSearch(search);
 
-    const matches = snapshot.docs
-      .map((doc) => ({
-        id: doc.id,
-        data: doc.data(),
-      }))
-      .map(({ id, data }) => ({
-        id,
-        data,
-        searchable: searchableText(data),
-      }))
-      .filter(({ searchable }) => searchable.includes(needle))
+    const products = snapshot.docs
+      .map((doc) => ({ id: doc.id, data: doc.data() }))
+      .filter(({ data }) => searchableText(data).includes(needle))
       .slice(0, MAX_RESULTS)
       .map(({ id, data }) => publicProduct(data, id));
 
     return sendJson(res, 200, {
       query: search,
-      count: matches.length,
-      products: matches,
+      count: products.length,
+      products,
       catalogScanLimit: MAX_CATALOG_SCAN,
       note:
-        "Prices are listed per size in GTQ. Active sizes do not guarantee stock. Verify availability separately before confirming an order.",
+        "Prices are in GTQ. Active sizes do not guarantee stock; verify availability separately.",
     });
   } catch (error) {
     console.error(
