@@ -71,6 +71,10 @@ import {
     CustomerPayment,
     initCustomerPayment
 } from "./customer/payment.js";
+
+import {
+    syncChatwootVisibility
+} from "./components/chatWoot.js";
 // ========================================
 // ROUTES
 // ========================================
@@ -204,6 +208,10 @@ export async function router() {
 
     const path =
         window.location.pathname;
+
+    // Keep customer support available throughout the public store,
+    // but never show the Chatwoot widget inside Enterprise.
+    syncChatwootVisibility(path);
 
     // ========================================
 // DOCUMENT TITLE
