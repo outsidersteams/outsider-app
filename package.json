@@ -5,6 +5,10 @@
   },
   "scripts": {
     "dev": "serve -s . -l 5500",
-    "sass": "sass css/main.scss css/main.css --watch"
+    "sass": "sass css/main.scss css/main.css --watch",
+    "test:outsider-ai": "node --check api/products.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.5.0"
   }
 }

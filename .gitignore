@@ -1,3 +1,17 @@
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Dependencies
+node_modules/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Vercel local configuration
+.vercel/
+
+# Build outputs
+dist/
