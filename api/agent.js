@@ -53,7 +53,7 @@ function normalizeSearch(value) {
     .toLocaleLowerCase("es");
 }
 
-function searchTerms(message) {
+function searchTerms(message, history = []) {
   const stopWords = new Set([
     "para", "como", "tienen", "tiene", "quiero", "quisiera",
     "puedo", "pueden", "precio", "precios", "disponible",
@@ -64,34 +64,37 @@ function searchTerms(message) {
     "me", "mi", "de", "la", "el", "en", "y", "o", "un",
     "al", "es", "si", "se", "lo", "le", "te", "venden",
     "vender", "comprar", "pedido", "hacer", "realizar",
-    "cuanto", "cuesta", "cuestan", "talla"
+    "cuanto", "cuesta", "cuestan", "talla", "recomiendas",
+    "recomendar", "recomienda", "cual", "cuales", "mas",
+    "otra", "otro", "otras", "otros", "negra", "negro",
+    "blanca", "blanco", "busco"
   ]);
 
-  const words = normalizeSearch(message)
-    .replace(/[^a-z0-9\s-]/g, " ")
-    .split(/\s+/);
-
+  // Prioriza el mensaje actual; si es una pregunta de seguimiento breve,
+  // reutiliza términos de los mensajes recientes para recuperar el producto.
+  const recentContext = Array.isArray(history)
+    ? history.slice(-6).map((item) =>
+        item && typeof item.content === "string" ? item.content : ""
+      )
+    : [];
+  const sourceTexts = [message, ...recentContext.reverse()];
   const unique = [];
 
-  for (const word of words) {
-    if (
-      word.length < 3 ||
-      stopWords.has(word) ||
-      unique.includes(word)
-    ) {
-      continue;
-    }
+  for (const source of sourceTexts) {
+    const words = normalizeSearch(source)
+      .replace(/[^a-z0-9\s-]/g, " ")
+      .split(/\s+/)
+      .filter(Boolean);
 
-    unique.push(word);
-
-    if (unique.length >= MAX_CATALOG_TERMS) {
-      break;
+    for (const word of words) {
+      // Preserve full SKU strings including hyphens.
+      if (word.length < 3 || stopWords.has(word) || unique.includes(word)) continue;
+      unique.push(word);
+      if (unique.length >= MAX_CATALOG_TERMS) return unique;
     }
   }
-
   return unique;
 }
-
 function getBaseUrl(req) {
   const configured =
     process.env.OUTSIDER_APP_BASE_URL ||
@@ -120,7 +123,7 @@ function getBaseUrl(req) {
   return "";
 }
 
-async function findProducts(req, message) {
+async function findProducts(req, message, history = []) {
   const apiKey = process.env.OUTSIDER_AI_API_KEY?.trim();
   const baseUrl = getBaseUrl(req);
 
@@ -131,7 +134,7 @@ async function findProducts(req, message) {
     };
   }
 
-  const terms = searchTerms(message);
+  const terms = searchTerms(message, history);
   const collected = new Map();
   let successfulLookups = 0;
 
@@ -357,10 +360,8 @@ module.exports = async function handler(req, res) {
   try {
     // Search the catalog automatically; never ask the customer
     // for permission to perform a lookup the system can do.
-    const [history, catalog] = [
-      cleanHistory(body.history),
-      await findProducts(req, message)
-    ];
+    const history = cleanHistory(body.history);
+    const catalog = await findProducts(req, message, history);
 
     const instructions = [
       "IDENTIDAD Y PERSONALIDAD",
@@ -375,7 +376,9 @@ module.exports = async function handler(req, res) {
       "No intentes cerrar una venta en todos los mensajes. Adapta tu estrategia a la intención del cliente.",
       "",
       "INICIATIVA Y AUTONOMÍA",
-      "El sistema ya consulta el catálogo automáticamente antes de generar tu respuesta.",
+      "El sistema consulta automáticamente el catálogo usando el mensaje actual y términos de la conversación reciente.",
+      "Para preguntas de seguimiento breves como '¿cuál me recomiendas?', usa el contexto reciente para entender a qué producto se refiere el cliente.",
+      "No supongas que una búsqueda sin resultados significa que el producto no existe; distingue entre no haber encontrado coincidencias y confirmar que no existe.",
       "No preguntes al cliente si quiere que consultes el catálogo, revises la disponibilidad o realices una comprobación que el sistema ya puede hacer.",
       "Si tienes información suficiente, responde directamente y avanza al siguiente paso comercial.",
       "Pregunta solo por datos que realmente necesites del cliente, como una talla para continuar una compra.",
@@ -400,24 +403,30 @@ module.exports = async function handler(req, res) {
       "",
       "PRECIOS",
       "Los precios del catálogo están expresados en quetzales guatemaltecos (GTQ).",
-      "Si preguntan el precio, responde directamente con el precio verificado.",
+      "Si preguntan el precio, responde directamente con el precio verificado para el producto, variante o talla consultados.",
+      "Si hay precios distintos por variante o talla, no generalices diciendo que cuestan lo mismo; indica el precio verificado de la opción consultada.",
       "No ocultes ni retrases artificialmente el precio para persuadir.",
+      "No añadas condiciones comerciales que el cliente no preguntó, como afirmar que todos los diseños o colores cuestan igual, salvo que sea necesario y esté verificado.",
       "No inventes promociones, envío gratis, cargos, descuentos ni políticas.",
       "",
       "POD Y FOTOGRAFÍAS",
-      "Los productos cuyo fulfillment.type sea 'made_to_order' se trabajan bajo pedido y no deben describirse como stock físico.",
-      "Explica este proceso con naturalidad cuando sea relevante, sin disculpas automáticas ni detalles operativos innecesarios.",
-      "Si solicitan más fotos, comparte solo recursos que realmente estén disponibles. Puedes orientar a las redes de OUTSIDER si son una alternativa real, pero no afirmes haber enviado fotos si no lo hiciste.",
+      "REGLA ESTRICTA: no menciones espontáneamente que un producto es POD, se fabrica bajo pedido o no requiere stock físico.",
+      "La única ocasión para explicar que un producto se trabaja bajo pedido es cuando el cliente solicita fotografías adicionales del producto.",
+      "Si solicita fotografías adicionales, explica brevemente que el producto se trabaja bajo pedido y que por ello puede que no haya fotografías reales adicionales disponibles.",
+      "No inventes ni afirmes haber enviado fotografías, imágenes, enlaces o recursos que no estén disponibles en esta integración.",
+      "Fuera de una solicitud de fotografías adicionales, no menciones el proceso de fabricación bajo ninguna circunstancia.",
       "",
       "DISPONIBILIDAD: REGLAS OBLIGATORIAS",
-      "El catálogo proporcionado es la fuente de verdad disponible para productos, precios, variantes, tallas y disponibilidad.",
-      "Para productos POD con availability.status 'available' y orderable true, puedes decir que se trabajan bajo pedido; no los describas como unidades físicas en stock.",
-      "Para productos físicos, afirma que hay stock solo cuando el estado correspondiente sea 'available' y orderable sea true.",
-      "Si el estado es 'out_of_stock', informa directamente que está agotado por el momento y, si resulta útil, ofrece una alternativa del catálogo.",
-      "Si el estado es 'unknown', no digas que está agotado ni que está disponible. Explica con naturalidad que el modelo aparece en el catálogo pero que por ahora no figura con disponibilidad confirmada. Puedes recomendar alternativas reales.",
-      "No le pidas al cliente permiso para comprobar el inventario: la consulta al catálogo ya se ha realizado automáticamente.",
-      "Si catalog_available es false, la consulta no pudo confirmarse técnicamente. No afirmes que revisaste correctamente el inventario ni inventes un resultado.",
-      "No inventes tallas, colores, modelos, precios ni existencias cuando no aparezcan en los datos proporcionados.",
+      "El catálogo es la fuente de verdad para los productos y los datos que devuelve.",
+      "Que un producto aparezca en el catálogo no significa que haya existencias físicas confirmadas.",
+      "Para productos físicos, afirma que una variante y talla están disponibles solo si su disponibilidad específica indica status 'available' y orderable true.",
+      "Si el estado específico es 'out_of_stock', informa directamente que esa variante o talla está agotada y ofrece una alternativa real si resulta pertinente.",
+      "Si el estado es 'unknown', no digas que está agotado ni disponible; indica brevemente que la disponibilidad no está confirmada.",
+      "Si catalog_available es false, la consulta técnica no pudo confirmarse. No afirmes que verificaste correctamente el inventario.",
+      "No inventes diseños, ubicación de logotipos, colores, tallas, precios, materiales, existencias, promociones, beneficios ni popularidad.",
+      "No recomiendes un diseño específico si los datos del catálogo no permiten identificarlo o describirlo con fundamento.",
+      "No confundas una consulta exitosa al catálogo con una confirmación de existencias.",
+      "No preguntes al cliente si quieres revisar el catálogo o comprobar inventario: la consulta se hace automáticamente.",
       "",
       "PEDIDOS Y LÍMITES",
       "Puedes asesorar y recopilar intención de compra, pero no puedes crear pedidos, cobrar, reservar productos ni confirmar una compra con esta API.",

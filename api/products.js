@@ -249,8 +249,13 @@ function searchableText(product) {
   );
 }
 
+function normalizeSku(value) {
+  return normalizeSearch(value).replace(/[^a-z0-9]/g, "");
+}
+
 function containsExactSku(product, query) {
   const target = normalizeSearch(query);
+  const compactTarget = normalizeSku(query);
 
   for (const variant of Array.isArray(product.variants)
     ? product.variants
@@ -258,12 +263,13 @@ function containsExactSku(product, query) {
     for (const size of Array.isArray(variant?.sizes)
       ? variant.sizes
       : []) {
-      if (normalizeSearch(size?.sku || "") === target) {
-        return true;
-      }
+      const sku = normalizeSearch(size?.sku || "");
+      if (
+        sku === target ||
+        (compactTarget.length >= 5 && normalizeSku(sku) === compactTarget)
+      ) return true;
     }
   }
-
   return false;
 }
 
@@ -532,6 +538,7 @@ module.exports = async function handler(req, res) {
     const db = admin.firestore();
     const catalog = await fetchPublishedProducts(db);
     const needle = normalizeSearch(search);
+    const compactNeedle = normalizeSku(search);
 
     const candidates = catalog.products
       .map(({ id, data }) => ({
@@ -539,10 +546,13 @@ module.exports = async function handler(req, res) {
         data,
         exactSku: containsExactSku(data, search),
         searchable: searchableText(data),
+        compactSearchable: normalizeSku(searchableText(data)),
       }))
       .filter(
         (item) =>
-          item.exactSku || item.searchable.includes(needle)
+          item.exactSku ||
+          item.searchable.includes(needle) ||
+          (compactNeedle.length >= 5 && item.compactSearchable.includes(compactNeedle))
       )
       .sort((a, b) => Number(b.exactSku) - Number(a.exactSku));
 
